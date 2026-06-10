@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT Dam Tester - Simulator Ketinggian Air</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Shared CSS stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .slider-card {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .range-container {
+      margin: 30px 0;
+      position: relative;
+    }
+    
+    .water-range {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 12px;
+      border-radius: 6px;
+      background: var(--border-light);
+      outline: none;
+      transition: background 0.3s;
+    }
+    
+    .water-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--primary-glow);
+      transition: transform 0.1s;
+    }
+    
+    .water-range::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+    
+    .preset-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    
+    .preset-btn {
+      padding: 15px;
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      background: var(--panel-bg);
+      color: var(--text-main);
+      transition: all 0.3s ease;
+    }
+    
+    .preset-btn i {
+      font-size: 1.5rem;
+    }
+    
+    .preset-btn.safe:hover {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: var(--success);
+      color: var(--success);
+    }
+    
+    .preset-btn.warning:hover {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+    
+    .preset-btn.danger:hover {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    
+    .log-box {
+      width: 100%;
+      height: 180px;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 15px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      overflow-y: auto;
+      text-align: left;
+      color: var(--text-main);
+    }
+    
+    .log-entry {
+      margin-bottom: 6px;
+      border-bottom: 1px dashed rgba(156, 163, 175, 0.1);
+      padding-bottom: 4px;
+    }
+    
+    .log-time {
+      color: var(--primary);
+      margin-right: 8px;
+    }
+    
+    .log-status {
+      font-weight: bold;
+    }
+    
+    .log-status.safe { color: var(--success); }
+    .log-status.warning { color: var(--warning); }
+    .log-status.danger { color: var(--danger); }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="alert-popup">
+    <i id="toastIcon" class="fa-solid"></i>
+    <span id="toastMessage"></span>
+  </div>
+
+  <div class="auth-wrapper">
+    <!-- Decorative background elements -->
+    <div class="auth-bg-deco top-left"></div>
+    <div class="auth-bg-deco bottom-right"></div>
+
+    <!-- Theme Switcher floating in top right -->
+    <div style="position: absolute; top: 25px; right: 25px; z-index: 10;">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+
+    <div class="glass-card" style="width: 100%; max-width: 600px; padding: 40px 30px;">
+      <div class="auth-header">
+        <i class="fa-solid fa-gauge-high app-icon"></i>
+        <h1>IoT Dam Simulator</h1>
+        <p>Pengontrol & Tester Ketinggian Air</p>
+      </div>
+
+      <!-- Slider controller -->
+      <div class="slider-card">
+        <div class="water-value-display" style="align-items: center;">
+          <div class="value" id="valDisplay" style="font-size: 4rem;">2.50<span>m</span></div>
+          <div class="label" id="valStatusDisplay" style="font-size: 0.95rem; font-weight: 700; color: var(--success);">STATUS: AMAN</div>
+        </div>
+        
+        <div class="range-container">
+          <input type="range" min="0" max="5" step="0.05" value="2.5" class="water-range" id="waterSlider">
+        </div>
+      </div>
+
+      <!-- Quick Preset buttons -->
+      <div class="preset-container">
+        <button class="preset-btn safe" onclick="setPreset(1.5)">
+          <i class="fa-solid fa-circle-check" style="color: var(--success);"></i>
+          <span>Set Aman</span>
+          <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">1.50 m</span>
+        </button>
+        <button class="preset-btn danger" onclick="setPreset(4.5)">
+          <i class="fa-solid fa-skull-crossbones" style="color: var(--danger);"></i>
+          <span>Set Bahaya</span>
+          <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">4.50 m</span>
+        </button>
+      </div>
+
+      <!-- Realtime Write Logs -->
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">LOG PENGIRIMAN DATA IOT</label>
+        <div class="log-box" id="logBox">
+          <div class="log-entry"><span class="log-time">[Sistem]</span>Simulator diinisialisasi. Geser slider untuk mengirim data.</div>
+        </div>
+      </div>
+
+      <div class="auth-footer" style="margin-top: 15px;">
+        <a href="dashboard.html"><i class="fa-solid fa-circle-arrow-left"></i> Kembali ke Dashboard Utama</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Firebase Connection & Write Logic -->
+  <!-- Firebase SDK V8 Compat (Works locally on file:// protocol without CORS blocking) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLu-MifEZsFNFyiB3KTINe7kPadh6CPOE",
+      authDomain: "monitoringair-37c90.firebaseapp.com",
+      databaseURL: "https://monitoringair-37c90-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "monitoringair-37c90",
+      storageBucket: "monitoringair-37c90.firebasestorage.app",
+      messagingSenderId: "834586591493",
+      appId: "1:834586591493:web:c5acc63ebf14aff8c1f76c",
+      measurementId: "G-65DR1XRQHC"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+  </script>
+
+  <script>
+
+    const slider = document.getElementById("waterSlider");
+    const valDisplay = document.getElementById("valDisplay");
+    const valStatusDisplay = document.getElementById("valStatusDisplay");
+    const logBox = document.getElementById("logBox");
+
+    let batasBahaya = 4.0;
+    let batasMaksimal = 5.0;
+
+    // Load settings from Firebase
+    try {
+      const settingsRef = db.ref("/settings");
+      settingsRef.on("value", (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          batasBahaya = data.bahaya || 4.0;
+          batasMaksimal = data.maksimal || 5.0;
+          
+          // Sync slider max capacity
+          slider.max = batasMaksimal;
+          updateUI(slider.value);
+        }
+      });
+    } catch (e) {
+      console.warn("Firebase settings load fail in simulator: ", e);
+    }
+
+    // Write data to Firebase
+    async function writeTinggiAir(val) {
+      const height = parseFloat(val);
+      try {
+        await db.ref("/ketinggian_air").set(height);
+        addLog(`Berhasil mengirim: ${height.toFixed(2)}m`, height);
+      } catch (error) {
+        addLog(`Gagal mengirim: ${error.message}`, height, true);
+        showToast("Koneksi Firebase gagal!", "danger");
+      }
+    }
+
+    // Add log entries with formatting
+    function addLog(msg, height, isError = false) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+      let statusClass = "safe";
+      let statusText = "Aman";
+      
+      if (height >= batasBahaya) {
+        statusClass = "danger";
+        statusText = "Bahaya";
+      }
+
+      const entry = document.createElement("div");
+      entry.className = "log-entry";
+      
+      if (isError) {
+        entry.innerHTML = `<span class="log-time">[${timeStr}]</span> <span style="color: var(--danger);">${msg}</span>`;
+      } else {
+        entry.innerHTML = `<span class="log-time">[${timeStr}]</span> ${msg} | <span class="log-status ${statusClass}">${statusText}</span>`;
+      }
+      
+      logBox.appendChild(entry);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // Preset triggers
+    window.setPreset = function(val) {
+      slider.value = val;
+      updateUI(val);
+      writeTinggiAir(val);
+    };
+
+    // UI updating handler
+    function updateUI(val) {
+      const height = parseFloat(val);
+      valDisplay.innerHTML = `${height.toFixed(2)}<span>m</span>`;
+      
+      // Update status tag
+      if (height >= batasBahaya) {
+        valStatusDisplay.innerText = "STATUS: BAHAYA";
+        valStatusDisplay.style.color = "var(--danger)";
+      } else {
+        valStatusDisplay.innerText = "STATUS: AMAN";
+        valStatusDisplay.style.color = "var(--success)";
+      }
+    }
+
+    // Monitor Firebase real-time to sync slider if changed by other clients
+    try {
+      const readRef = db.ref("/ketinggian_air");
+      readRef.on("value", (snapshot) => {
+        if (snapshot.exists()) {
+          const remoteVal = snapshot.val();
+          if (Math.abs(slider.value - remoteVal) > 0.01) {
+            slider.value = remoteVal;
+            updateUI(remoteVal);
+            addLog(`Menerima data sinkronisasi: ${parseFloat(remoteVal).toFixed(2)}m`, remoteVal);
+          }
+        }
+      });
+    } catch (e) {
+      console.warn("Real-time listener failed: ", e);
+    }
+
+    // Bind slider input actions
+    slider.addEventListener("input", (e) => {
+      updateUI(e.target.value);
+    });
+
+    slider.addEventListener("change", (e) => {
+      writeTinggiAir(e.target.value);
+    });
+
+    // Initialize UI
+    updateUI(slider.value);
+  </script>
+
+  <!-- Common page behaviors -->
+  <script>
+    // Theme logic
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      const icon = document.querySelector(".theme-toggle i");
+      if (savedTheme === "dark") {
+        icon.className = "fa-solid fa-sun";
+      } else {
+        icon.className = "fa-solid fa-moon";
+      }
+    });
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+      
+      document.documentElement.setAttribute("data-theme", nextTheme);
+      localStorage.setItem("theme", nextTheme);
+      
+      const icon = document.querySelector(".theme-toggle i");
+      icon.className = nextTheme === "dark" ? "fa-solid fa-sun" : "fa-solid fa-moon";
+    }
+
+    // Toast alert system
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toast");
+      const toastIcon = document.getElementById("toastIcon");
+      const toastMessage = document.getElementById("toastMessage");
+
+      toastMessage.innerText = message;
+      
+      toast.className = "alert-popup";
+      toastIcon.className = "fa-solid";
+
+      if (type === "success") {
+        toast.classList.add("success");
+        toastIcon.classList.add("fa-circle-check");
+      } else {
+        toast.classList.add("danger");
+        toastIcon.classList.add("fa-circle-xmark");
+      }
+
+      toast.classList.add("show");
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+  </script>
+
+</body>
+</html>

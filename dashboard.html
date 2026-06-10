@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Monitoring Ketinggian Air Bendungan Berbasis IoT</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="alert-popup">
+    <i id="toastIcon" class="fa-solid"></i>
+    <span id="toastMessage"></span>
+  </div>
+
+  <div class="app-layout">
+    
+    <!-- Mobile Hamburger Header -->
+    <div class="mobile-header">
+      <div class="sidebar-logo" style="margin-bottom: 0; padding: 0;">
+        <i class="fa-solid fa-droplet"></i>
+        <span>Monitoring Ketinggian Air Dam</span>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button class="theme-toggle" onclick="toggleTheme()" style="width: 38px; height: 38px;">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="menu-toggle" onclick="toggleSidebar()">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+      <div>
+        <div class="sidebar-logo">
+          <i class="fa-solid fa-droplet"></i>
+          <span>Monitoring Ketinggian Air Dam</span>
+        </div>
+        <div class="sidebar-menu">
+          <a href="#" class="active">
+            <i class="fa-solid fa-house"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="pengaturan.html">
+            <i class="fa-solid fa-sliders"></i>
+            <span>Pengaturan</span>
+          </a>
+          <a href="profil.html">
+            <i class="fa-solid fa-user"></i>
+            <span>Profil</span>
+          </a>
+        </div>
+      </div>
+      <div class="sidebar-menu">
+        <a href="index.html" class="logout" onclick="logout(event)">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Keluar</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      
+      <!-- Top Header Bar (Desktop/Tablet) -->
+      <div class="top-bar">
+        <div class="welcome-msg">
+          <h2>Dashboard Utama</h2>
+          <p>Status monitoring bendungan real-time</p>
+        </div>
+        <div class="top-bar-actions">
+          <div class="firebase-status-badge" id="firebaseStatus" style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 14px; font-size: 0.8rem; font-weight: 600; background: var(--panel-bg); border: 1px solid var(--panel-border); color: var(--text-muted); box-shadow: var(--shadow-main);">
+            <i class="fa-solid fa-circle-notch fa-spin" style="color: var(--primary);"></i>
+            <span>Menghubungkan...</span>
+          </div>
+          <button class="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <div class="user-profile-badge">
+            <div class="avatar-sm">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <span id="profileUsername">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Grid: Water Monitor & Trend Chart side-by-side -->
+      <div class="dashboard-grid-two-col">
+        
+        <!-- Left: Water Level Indicator Card -->
+        <div class="glass-card water-monitor-card" style="margin-bottom: 0; height: 100%;">
+          <h3>Monitoring Level Air</h3>
+          
+          <div class="monitor-flex">
+            <!-- Animated Water Tank -->
+            <div class="water-tank-wrapper">
+              <div class="tank-legend" id="tankLegend">
+                <span>500cm</span>
+                <span>400cm</span>
+                <span>300cm</span>
+                <span>200cm</span>
+                <span>100cm</span>
+                <span>0cm</span>
+              </div>
+              <div class="water-tank">
+                <div class="water-fill" id="waterLevel" style="height: 60%; color: #3b82f6;">
+                  <svg class="wave-fill-svg" viewBox="0 0 120 28" preserveAspectRatio="none">
+                    <path d="M0,15 C30,5 90,25 120,15 L120,30 L0,30 Z" fill="currentColor"></path>
+                    <path d="M0,15 C45,25 75,5 120,15 L120,30 L0,30 Z" fill="currentColor" opacity="0.4"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Value Display -->
+            <div class="water-value-display">
+              <div class="value" id="tinggiAirDisplay">300<span>cm</span></div>
+              <div class="label">Ketinggian Air</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;" id="lastUpdated">Menghubungkan...</div>
+            </div>
+          </div>
+
+          <!-- Status Indicator -->
+          <div class="status-indicator-box">
+            <span class="status-lbl">Status Bendungan:</span>
+            <span class="status-badge" id="statusBadge">Aman</span>
+          </div>
+        </div>
+
+        <!-- Right: Trend Chart Card -->
+        <div class="glass-card chart-card" style="margin-bottom: 0; height: 100%; display: flex; flex-direction: column;">
+          <h3>
+            Tren Ketinggian Air
+            <select id="chartFilter" onchange="updateChartFilter()">
+              <option value="6h">6 Jam Terakhir</option>
+              <option value="24h">24 Jam Terakhir</option>
+            </select>
+          </h3>
+          <div class="chart-container" style="flex: 1; min-height: 260px;">
+            <canvas id="waterChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Firebase SDK V8 Compat (Works locally on file:// protocol without CORS blocking) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLu-MifEZsFNFyiB3KTINe7kPadh6CPOE",
+      authDomain: "monitoringair-37c90.firebaseapp.com",
+      databaseURL: "https://monitoringair-37c90-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "monitoringair-37c90",
+      storageBucket: "monitoringair-37c90.firebasestorage.app",
+      messagingSenderId: "834586591493",
+      appId: "1:834586591493:web:c5acc63ebf14aff8c1f76c",
+      measurementId: "G-65DR1XRQHC"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+  </script>
+
+  <script>
+
+    // Dynamic threshold settings dalam METER (dikonversi dari cm yang disimpan di Firebase)
+    // Default: 400cm = 4.0m bahaya, 500cm = 5.0m maksimal
+    let batasBahaya = 4.0;
+    let batasMaksimal = 5.0;
+
+    // Helper to update Firebase connection status badge
+    const setFirebaseStatus = (status, errorMsg = "") => {
+      const badge = document.getElementById("firebaseStatus");
+      if (!badge) return;
+      
+      if (status === "connected") {
+        badge.style.color = "var(--success)";
+        badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>Firebase Terhubung</span>`;
+      } else if (status === "error") {
+        badge.style.color = "var(--danger)";
+        badge.innerHTML = `<i class="fa-solid fa-circle-exclamation" title="${errorMsg}"></i> <span title="${errorMsg}">Firebase Error</span>`;
+      }
+    };
+
+    // Render label tangki dalam satuan cm (max dalam meter)
+    const updateTankLegend = (maxMeter) => {
+      const legend = document.getElementById("tankLegend");
+      if (!legend) return;
+      
+      let html = "";
+      const intervals = 5;
+      for (let i = intervals; i >= 0; i--) {
+        const valCm = Math.round(maxMeter * 100 * (i / intervals));
+        html += `<span>${valCm}cm</span>`;
+      }
+      legend.innerHTML = html;
+    };
+
+    // Setup chart variables and state
+    let chart;
+    const historyData = {
+      labels: [],
+      dataPoints: []
+    };
+
+    // Formulate initial mock time labels for the chart (last 6 values)
+    const initChart = () => {
+      const ctx = document.getElementById('waterChart').getContext('2d');
+      
+      // Setup gradient fill underneath line
+      const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+      gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+      // Generate times for labels (data awal dalam cm)
+      for (let i = 5; i >= 0; i--) {
+        const time = new Date(Date.now() - i * 15 * 60 * 1000);
+        historyData.labels.push(time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        historyData.dataPoints.push(Math.round(250 + Math.random() * 80));
+      }
+
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: historyData.labels,
+          datasets: [{
+            label: 'Level Air (cm)',
+            data: historyData.dataPoints,
+            borderColor: '#3b82f6',
+            borderWidth: 3,
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              min: 0,
+              max: batasMaksimal * 100, // dalam cm untuk grafik
+              grid: { color: 'rgba(156, 163, 175, 0.1)' },
+              ticks: { color: 'var(--text-muted)' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: 'var(--text-muted)' }
+            }
+          }
+        }
+      });
+    };
+
+    // Function to add new point to chart in real-time
+    const addChartData = (value) => {
+      if (!chart) return;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      chart.data.labels.push(timeStr);
+      chart.data.datasets[0].data.push(value);
+      
+      // Limit to 8 points for view aesthetic
+      if (chart.data.labels.length > 8) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+      }
+      
+      chart.update();
+    };
+
+    // Process & update UI with current water level
+    // statusOverride: jika diisi, gunakan Status dari Firebase langsung
+    window.updateWaterLevelUI = (height, skipChartUpdate = false, statusOverride = null) => {
+      // Boundary check
+      height = Math.max(0, Math.min(batasMaksimal, height));
+      
+      // Store globally to allow instant re-renders when limits change
+      window.lastWaterHeight = height;
+      window.lastStatusOverride = statusOverride;
+      
+      const tinggiAirDisplay = document.getElementById("tinggiAirDisplay");
+      const waterLevel = document.getElementById("waterLevel");
+      const statusBadge = document.getElementById("statusBadge");
+      const lastUpdated = document.getElementById("lastUpdated");
+      
+      // Tampilkan nilai dalam cm (height internal dalam meter, konversi ke cm untuk display)
+      tinggiAirDisplay.innerHTML = `${Math.round(height * 100)}<span>cm</span>`;
+      
+      // Update water percentage height representation
+      const percent = (height / batasMaksimal) * 100;
+      waterLevel.style.height = `${percent}%`;
+      
+      // Remove previous styling classes
+      waterLevel.className = "water-fill";
+      statusBadge.className = "status-badge";
+      
+      // Gunakan Status dari Firebase jika tersedia, jika tidak pakai threshold lokal
+      if (statusOverride !== null) {
+        if (statusOverride.toLowerCase() === "bahaya") {
+          waterLevel.classList.add("bahaya");
+          statusBadge.classList.add("bahaya");
+          statusBadge.innerText = "Bahaya";
+        } else {
+          waterLevel.classList.add("aman");
+          statusBadge.classList.add("aman");
+          statusBadge.innerText = "Aman";
+        }
+      } else {
+        // Fallback: kategorikan berdasarkan threshold lokal
+        if (height < batasBahaya) {
+          waterLevel.classList.add("aman");
+          statusBadge.classList.add("aman");
+          statusBadge.innerText = "Aman";
+        } else {
+          waterLevel.classList.add("bahaya");
+          statusBadge.classList.add("bahaya");
+          statusBadge.innerText = "Bahaya";
+        }
+      }
+      
+      // Update last timestamp
+      const now = new Date();
+      lastUpdated.innerText = `Update: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})} WIB`;
+      
+      if (!skipChartUpdate) {
+        // Kirim dalam cm ke grafik
+        addChartData(Math.round(height * 100));
+      }
+    };
+
+    // Firebase Listener
+    const listenFirebase = () => {
+      // Fallback variables if Firebase doesn't trigger
+      let fallbackInterval;
+
+      const triggerFallbackSimulation = () => {
+        if (fallbackInterval) return;
+        console.log("Simulasi data ketinggian (Firebase tidak terhubung).");
+        
+        // Simulasi dalam meter (internal)
+        let simHeight = 2.8;
+
+        fallbackInterval = setInterval(() => {
+          simHeight += (Math.random() - 0.45) * 0.15;
+          if (simHeight > 4.5) simHeight = 4.2;
+          if (simHeight < 1.5) simHeight = 1.8;
+          
+          window.updateWaterLevelUI(simHeight);
+        }, 4000);
+      };
+
+      // Load Settings dari Firebase (nilai disimpan dalam cm, konversi ke meter)
+      try {
+        const settingsRef = db.ref("/settings");
+        settingsRef.on("value", (snapshot) => {
+          setFirebaseStatus("connected");
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            // Konversi dari cm ke meter untuk dipakai di visualisasi
+            batasBahaya  = (data.bahaya  || 400) / 100;
+            batasMaksimal = (data.maksimal || 500) / 100;
+            console.log(`Threshold (dari Firebase cm): Bahaya=${data.bahaya}cm (${batasBahaya}m), Maks=${data.maksimal}cm (${batasMaksimal}m)`);
+            
+            updateTankLegend(batasMaksimal);
+            if (chart) {
+              chart.options.scales.y.max = batasMaksimal * 100; // grafik dalam cm
+              chart.update();
+            }
+            
+            // Re-render UI segera jika sudah ada data ketinggian
+            if (typeof window.lastWaterHeight !== "undefined") {
+              window.updateWaterLevelUI(window.lastWaterHeight, true, window.lastStatusOverride || null);
+            }
+          }
+        }, (error) => {
+          console.error("Settings Firebase error:", error);
+          setFirebaseStatus("error", error.message);
+        });
+      } catch (e) {
+        console.warn("Could not load settings from Firebase, using defaults.", e);
+        setFirebaseStatus("error", e.message);
+      }
+
+      try {
+        // Baca Ketinggian dari /MonitoringAir — Status dihitung oleh website, bukan ESP
+        const sensorRef = db.ref("/MonitoringAir/Ketinggian");
+        
+        sensorRef.on("value", (snapshot) => {
+          setFirebaseStatus("connected");
+          if (snapshot.exists()) {
+            const heightCm = Number(snapshot.val());
+            const heightM  = heightCm / 100; // konversi ke meter untuk visualisasi
+
+            // Hitung Status berdasarkan threshold batasBahaya (dari /settings)
+            const statusDihitung = heightM >= batasBahaya ? "Bahaya" : "Aman";
+
+            console.log(`[Firebase] Ketinggian: ${heightCm}cm | Status dihitung: ${statusDihitung}`);
+
+            // Tulis Status hasil kalkulasi website ke Firebase
+            db.ref("/MonitoringAir/Status").set(statusDihitung)
+              .then(() => console.log(`[Firebase] Status berhasil ditulis: ${statusDihitung}`))
+              .catch((err) => console.warn("Gagal menulis Status ke Firebase:", err));
+
+            // Update UI level air
+            window.updateWaterLevelUI(heightM, false, statusDihitung);
+            
+            // Clear fallback jika Firebase sudah aktif
+            if (fallbackInterval) {
+              clearInterval(fallbackInterval);
+              fallbackInterval = null;
+            }
+          } else {
+            console.warn("Field Ketinggian tidak ditemukan di /MonitoringAir.");
+            triggerFallbackSimulation();
+          }
+        }, (error) => {
+          console.warn("Firebase read error: ", error);
+          setFirebaseStatus("error", error.message);
+          triggerFallbackSimulation();
+        });
+      } catch (e) {
+        console.error("Firebase Initialization failed on dashboard, simulating...", e);
+        setFirebaseStatus("error", e.message);
+        triggerFallbackSimulation();
+      }
+    };
+
+    // Init page elements
+    document.addEventListener("DOMContentLoaded", () => {
+      initChart();
+      listenFirebase();
+    });
+
+  </script>
+
+  <!-- Sidebar & Theme switching logic -->
+  <script>
+    // Theme logic
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      // Set username
+      const username = localStorage.getItem("loginUser") || "Admin";
+      document.getElementById("profileUsername").innerText = username;
+      
+      const icon = document.querySelector(".theme-toggle i");
+      if (savedTheme === "dark") {
+        icon.className = "fa-solid fa-sun";
+      } else {
+        icon.className = "fa-solid fa-moon";
+      }
+    });
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+      
+      document.documentElement.setAttribute("data-theme", nextTheme);
+      localStorage.setItem("theme", nextTheme);
+      
+      // Update icons
+      const icons = document.querySelectorAll(".theme-toggle i");
+      icons.forEach(icon => {
+        icon.className = nextTheme === "dark" ? "fa-solid fa-sun" : "fa-solid fa-moon";
+      });
+    }
+
+    // Mobile Navigation triggers
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      sidebar.classList.toggle("active");
+    }
+
+    // Handle logout safely
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("loginUser");
+      window.location.href = "index.html";
+    }
+
+    // Chart filter mocks
+    function updateChartFilter() {
+      const filter = document.getElementById("chartFilter").value;
+      const toast = document.getElementById("toast");
+      const toastIcon = document.getElementById("toastIcon");
+      const toastMessage = document.getElementById("toastMessage");
+
+      toastMessage.innerText = `Menyaring data grafik: ${filter === '6h' ? '6 Jam' : '24 Jam'}`;
+      toast.className = "alert-popup success show";
+      toastIcon.className = "fa-solid fa-circle-check";
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2000);
+    }
+  </script>
+
+</body>
+</html>

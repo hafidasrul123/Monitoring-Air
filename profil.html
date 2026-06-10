@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil - Monitoring Ketinggian Air Bendungan Berbasis IoT</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="alert-popup">
+    <i id="toastIcon" class="fa-solid"></i>
+    <span id="toastMessage"></span>
+  </div>
+
+  <div class="app-layout">
+    
+    <!-- Mobile Hamburger Header -->
+    <div class="mobile-header">
+      <div class="sidebar-logo" style="margin-bottom: 0; padding: 0;">
+        <i class="fa-solid fa-droplet"></i>
+        <span>Monitoring Ketinggian Air Dam</span>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button class="theme-toggle" onclick="toggleTheme()" style="width: 38px; height: 38px;">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="menu-toggle" onclick="toggleSidebar()">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+      <div>
+        <div class="sidebar-logo">
+          <i class="fa-solid fa-droplet"></i>
+          <span>Monitoring Ketinggian Air Dam</span>
+        </div>
+        <div class="sidebar-menu">
+          <a href="dashboard.html">
+            <i class="fa-solid fa-house"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="pengaturan.html">
+            <i class="fa-solid fa-sliders"></i>
+            <span>Pengaturan</span>
+          </a>
+          <a href="#" class="active">
+            <i class="fa-solid fa-user"></i>
+            <span>Profil</span>
+          </a>
+        </div>
+      </div>
+      <div class="sidebar-menu">
+        <a href="index.html" class="logout" onclick="logout(event)">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Keluar</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      
+      <!-- Top Header Bar -->
+      <div class="top-bar">
+        <div class="welcome-msg">
+          <h2>Profil Pengguna</h2>
+          <p>Informasi & keamanan akun sistem monitoring</p>
+        </div>
+        <div class="top-bar-actions">
+          <button class="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <div class="user-profile-badge">
+            <div class="avatar-sm">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <span id="profileUsernameBadge">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Grid Layout -->
+      <div class="profile-grid">
+        
+        <!-- Left: Account Info Card -->
+        <div class="glass-card profile-sidebar-card">
+          <div class="avatar-large">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <h3 id="profileUsernameMain">Admin</h3>
+          <p>Petugas Monitor Bendungan</p>
+          
+          <div class="profile-details-list">
+            <div class="profile-detail-item">
+              <span class="lbl">Status Akun</span>
+              <span class="val" style="color: var(--success);"><i class="fa-solid fa-circle-check"></i> Aktif</span>
+            </div>
+            <div class="profile-detail-item">
+              <span class="lbl">Sistem Lokasi</span>
+              <span class="val">Bendungan Utama</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Security / Change Password Form -->
+        <div class="glass-card security-card">
+          <h3>Keamanan Akun</h3>
+          
+          <div class="form-group">
+            <label class="form-label" for="oldPassword">Password Lama</label>
+            <div class="input-container">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="oldPassword" placeholder="Masukkan password lama Anda">
+              <i class="fa-regular fa-eye password-toggle" onclick="togglePasswordVisibility('oldPassword', 'oldEye')" id="oldEye"></i>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newPassword">Password Baru</label>
+            <div class="input-container">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="newPassword" placeholder="Masukkan password baru Anda">
+              <i class="fa-regular fa-eye password-toggle" onclick="togglePasswordVisibility('newPassword', 'newEye')" id="newEye"></i>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirmPassword">Konfirmasi Password Baru</label>
+            <div class="input-container">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="confirmPassword" placeholder="Ulangi password baru Anda">
+              <i class="fa-regular fa-eye password-toggle" onclick="togglePasswordVisibility('confirmPassword', 'confirmEye')" id="confirmEye"></i>
+            </div>
+          </div>
+
+          <button class="btn-primary" onclick="ubahPassword()" style="margin-top: 10px;">
+            Simpan Perubahan <i class="fa-solid fa-save"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Theme logic
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      // Set correct usernames from storage
+      const loginUser = localStorage.getItem("loginUser") || "Admin";
+      document.getElementById("profileUsernameBadge").innerText = loginUser;
+      document.getElementById("profileUsernameMain").innerText = loginUser;
+
+      const icon = document.querySelector(".theme-toggle i");
+      if (savedTheme === "dark") {
+        icon.className = "fa-solid fa-sun";
+      } else {
+        icon.className = "fa-solid fa-moon";
+      }
+    });
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+      
+      document.documentElement.setAttribute("data-theme", nextTheme);
+      localStorage.setItem("theme", nextTheme);
+      
+      // Update icons
+      const icons = document.querySelectorAll(".theme-toggle i");
+      icons.forEach(icon => {
+        icon.className = nextTheme === "dark" ? "fa-solid fa-sun" : "fa-solid fa-moon";
+      });
+    }
+
+    // Toast alert system
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toast");
+      const toastIcon = document.getElementById("toastIcon");
+      const toastMessage = document.getElementById("toastMessage");
+
+      toastMessage.innerText = message;
+      
+      toast.className = "alert-popup";
+      toastIcon.className = "fa-solid";
+
+      if (type === "success") {
+        toast.classList.add("success");
+        toastIcon.classList.add("fa-circle-check");
+      } else {
+        toast.classList.add("danger");
+        toastIcon.classList.add("fa-circle-xmark");
+      }
+
+      toast.classList.add("show");
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+
+    // Toggle single password field visibility
+    function togglePasswordVisibility(inputId, eyeId) {
+      const input = document.getElementById(inputId);
+      const eye = document.getElementById(eyeId);
+      
+      if (input.type === "password") {
+        input.type = "text";
+        eye.className = "fa-regular fa-eye-slash password-toggle";
+      } else {
+        input.type = "password";
+        eye.className = "fa-regular fa-eye password-toggle";
+      }
+    }
+
+    // Mobile navigation triggers
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      sidebar.classList.toggle("active");
+    }
+
+    // Handle logout safely
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("loginUser");
+      window.location.href = "index.html";
+    }
+
+    // Password modification logic
+    function ubahPassword() {
+      let oldPassword = document.getElementById("oldPassword").value.trim();
+      let newPassword = document.getElementById("newPassword").value.trim();
+      let confirmPassword = document.getElementById("confirmPassword").value.trim();
+      
+      let savedPassword = localStorage.getItem("password") || "admin123";
+
+      if (!oldPassword || !newPassword || !confirmPassword) {
+        showToast("Semua kolom harus diisi!", "danger");
+        return;
+      }
+
+      if (oldPassword !== savedPassword) {
+        showToast("Password lama salah!", "danger");
+        return;
+      }
+
+      if (newPassword.length < 5) {
+        showToast("Password baru minimal 5 karakter!", "danger");
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showToast("Konfirmasi password baru tidak cocok!", "danger");
+        return;
+      }
+
+      // Save password update
+      localStorage.setItem("password", newPassword);
+      showToast("Password berhasil diubah!", "success");
+
+      // Reset values
+      document.getElementById("oldPassword").value = "";
+      document.getElementById("newPassword").value = "";
+      document.getElementById("confirmPassword").value = "";
+    }
+  </script>
+
+</body>
+</html>

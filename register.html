@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Monitoring Ketinggian Air Bendungan Berbasis IoT</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="alert-popup">
+    <i id="toastIcon" class="fa-solid"></i>
+    <span id="toastMessage"></span>
+  </div>
+
+  <div class="auth-wrapper">
+    <!-- Decorative background elements -->
+    <div class="auth-bg-deco top-left"></div>
+    <div class="auth-bg-deco bottom-right"></div>
+
+    <!-- Theme Switcher floating in top right -->
+    <div style="position: absolute; top: 25px; right: 25px; z-index: 10;">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+
+    <div class="auth-card glass-card">
+      <div class="auth-header">
+        <i class="fa-solid fa-droplet app-icon"></i>
+        <h1>Daftar Akun Baru</h1>
+        <p>Registrasi Pengguna IoT</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <div class="input-container">
+          <i class="fa-solid fa-user input-icon"></i>
+          <input type="text" id="username" placeholder="Buat Username baru" autocomplete="username">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="input-container">
+          <i class="fa-solid fa-lock input-icon"></i>
+          <input type="password" id="password" placeholder="Buat Password baru" autocomplete="new-password">
+          <i class="fa-regular fa-eye password-toggle" onclick="togglePassword('password', 'passwordEye')" id="passwordEye"></i>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="confirmPassword">Konfirmasi Password</label>
+        <div class="input-container">
+          <i class="fa-solid fa-lock input-icon"></i>
+          <input type="password" id="confirmPassword" placeholder="Ulangi Password baru" autocomplete="new-password">
+          <i class="fa-regular fa-eye password-toggle" onclick="togglePassword('confirmPassword', 'confirmPasswordEye')" id="confirmPasswordEye"></i>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="register()">
+        Daftar Sekarang <i class="fa-solid fa-user-plus"></i>
+      </button>
+
+      <div class="auth-footer">
+        Sudah punya akun? <a href="index.html">Masuk di sini</a>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Theme Initialization & Logic
+  const savedTheme = localStorage.getItem("theme") || "light";
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  
+  document.addEventListener("DOMContentLoaded", () => {
+    const icon = document.querySelector(".theme-toggle i");
+    if (savedTheme === "dark") {
+      icon.className = "fa-solid fa-sun";
+    } else {
+      icon.className = "fa-solid fa-moon";
+    }
+  });
+
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    const nextTheme = currentTheme === "dark" ? "light" : "dark";
+    
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    localStorage.setItem("theme", nextTheme);
+    
+    const icon = document.querySelector(".theme-toggle i");
+    icon.className = nextTheme === "dark" ? "fa-solid fa-sun" : "fa-solid fa-moon";
+  }
+
+  // Toast alert system
+  function showToast(message, type = "success") {
+    const toast = document.getElementById("toast");
+    const toastIcon = document.getElementById("toastIcon");
+    const toastMessage = document.getElementById("toastMessage");
+
+    toastMessage.innerText = message;
+    
+    toast.className = "alert-popup";
+    toastIcon.className = "fa-solid";
+
+    if (type === "success") {
+      toast.classList.add("success");
+      toastIcon.classList.add("fa-circle-check");
+    } else {
+      toast.classList.add("danger");
+      toastIcon.classList.add("fa-circle-xmark");
+    }
+
+    toast.classList.add("show");
+
+    setTimeout(() => {
+      toast.classList.remove("show");
+    }, 3000);
+  }
+
+  // Toggle single password visibility
+  function togglePassword(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const eye = document.getElementById(iconId);
+    
+    if (input.type === "password") {
+      input.type = "text";
+      eye.className = "fa-regular fa-eye-slash password-toggle";
+    } else {
+      input.type = "password";
+      eye.className = "fa-regular fa-eye password-toggle";
+    }
+  }
+
+  // Registration process
+  function register() {
+    let username = document.getElementById("username").value.trim();
+    let password = document.getElementById("password").value.trim();
+    let confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+    if (!username || !password || !confirmPassword) {
+      showToast("Semua data harus diisi!", "danger");
+      return;
+    }
+
+    if (password.length < 5) {
+      showToast("Password minimal 5 karakter!", "danger");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showToast("Konfirmasi password tidak cocok!", "danger");
+      return;
+    }
+
+    localStorage.setItem("username", username);
+    localStorage.setItem("password", password);
+
+    showToast("Registrasi berhasil! Mengalihkan ke login...", "success");
+
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 1500);
+  }
+</script>
+
+</body>
+</html>

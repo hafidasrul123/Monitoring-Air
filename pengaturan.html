@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan Ketinggian - Monitoring Ketinggian Air Bendungan</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="alert-popup">
+    <i id="toastIcon" class="fa-solid"></i>
+    <span id="toastMessage"></span>
+  </div>
+
+  <div class="app-layout">
+    
+    <!-- Mobile Hamburger Header -->
+    <div class="mobile-header">
+      <div class="sidebar-logo" style="margin-bottom: 0; padding: 0;">
+        <i class="fa-solid fa-droplet"></i>
+        <span>Monitoring Ketinggian Air Dam</span>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button class="theme-toggle" onclick="toggleTheme()" style="width: 38px; height: 38px;">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="menu-toggle" onclick="toggleSidebar()">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+      <div>
+        <div class="sidebar-logo">
+          <i class="fa-solid fa-droplet"></i>
+          <span>Monitoring Ketinggian Air Dam</span>
+        </div>
+        <div class="sidebar-menu">
+          <a href="dashboard.html">
+            <i class="fa-solid fa-house"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="active">
+            <i class="fa-solid fa-sliders"></i>
+            <span>Pengaturan</span>
+          </a>
+          <a href="profil.html">
+            <i class="fa-solid fa-user"></i>
+            <span>Profil</span>
+          </a>
+        </div>
+      </div>
+      <div class="sidebar-menu">
+        <a href="index.html" class="logout" onclick="logout(event)">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Keluar</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      
+      <!-- Top Header Bar -->
+      <div class="top-bar">
+        <div class="welcome-msg">
+          <h2>Pengaturan Ambang Batas</h2>
+          <p>Konfigurasi parameter level Aman, Waspada, dan Bahaya</p>
+        </div>
+        <div class="top-bar-actions">
+          <button class="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <div class="user-profile-badge">
+            <div class="avatar-sm">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <span id="profileUsernameBadge">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Layout -->
+      <div style="max-width: 700px; margin: 0 auto;">
+        <div class="glass-card">
+          <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 25px;">
+            <i class="fa-solid fa-gear" style="color: var(--primary); margin-right: 10px;"></i>
+            Pengaturan Parameter Ketinggian Air
+          </h3>
+          
+
+
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label class="form-label" for="batasBahaya">Batas Bahaya (cm)</label>
+            <div class="input-container">
+              <i class="fa-solid fa-circle-xmark input-icon" style="color: var(--danger);"></i>
+              <input type="number" id="batasBahaya" step="1" min="1" placeholder="Contoh: 400">
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 4px;">
+              Ketinggian air di atas batas ini akan memicu status <b>Bahaya</b>.
+            </span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 30px;">
+            <label class="form-label" for="batasMaksimal">Kapasitas Maksimal Dam (cm)</label>
+            <div class="input-container">
+              <i class="fa-solid fa-water input-icon" style="color: var(--primary);"></i>
+              <input type="number" id="batasMaksimal" step="1" min="1" placeholder="Contoh: 500">
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 4px;">
+              Batas ketinggian <b>maksimal</b> (mentok atas) dari visualisasi dam.
+            </span>
+          </div>
+
+          <button class="btn-primary" onclick="simpanPengaturan()">
+            Simpan Ambang Batas <i class="fa-solid fa-floppy-disk"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Firebase SDK V8 Compat (Works locally on file:// protocol without CORS blocking) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLu-MifEZsFNFyiB3KTINe7kPadh6CPOE",
+      authDomain: "monitoringair-37c90.firebaseapp.com",
+      databaseURL: "https://monitoringair-37c90-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "monitoringair-37c90",
+      storageBucket: "monitoringair-37c90.firebasestorage.app",
+      messagingSenderId: "834586591493",
+      appId: "1:834586591493:web:c5acc63ebf14aff8c1f76c",
+      measurementId: "G-65DR1XRQHC"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+  </script>
+
+  <script>
+    const inputBahaya = document.getElementById("batasBahaya");
+    const inputMaksimal = document.getElementById("batasMaksimal");
+
+    // Load settings from Firebase on page load (nilai disimpan dalam cm)
+    try {
+      const settingsRef = db.ref("/settings");
+      settingsRef.on("value", (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          inputBahaya.value = data.bahaya || 400;
+          inputMaksimal.value = data.maksimal || 500;
+        } else {
+          // Default jika belum ada data
+          inputBahaya.value = 400;
+          inputMaksimal.value = 500;
+        }
+      });
+    } catch (e) {
+      console.error("Firebase read settings failed, using defaults", e);
+      inputBahaya.value = 400;
+      inputMaksimal.value = 500;
+    }
+
+    // Simpan pengaturan ke Firebase (nilai dalam cm, bilangan bulat)
+    window.simpanPengaturan = async function() {
+      const bahayaVal = parseInt(inputBahaya.value);
+      const maksimalVal = parseInt(inputMaksimal.value);
+
+      if (isNaN(bahayaVal) || isNaN(maksimalVal)) {
+        showToast("Kolom harus diisi angka yang valid!", "danger");
+        return;
+      }
+
+      if (bahayaVal <= 0 || maksimalVal <= 0) {
+        showToast("Batas ketinggian harus lebih besar dari 0 cm!", "danger");
+        return;
+      }
+
+      if (bahayaVal >= maksimalVal) {
+        showToast("Kapasitas Maksimal Dam harus lebih tinggi dari batas Bahaya!", "danger");
+        return;
+      }
+
+      try {
+        // Simpan dalam satuan cm
+        await db.ref("/settings").set({
+          bahaya: bahayaVal,
+          maksimal: maksimalVal
+        });
+        showToast(`Pengaturan disimpan! Bahaya: ${bahayaVal}cm, Maksimal: ${maksimalVal}cm`, "success");
+      } catch (error) {
+        console.error("Firebase write error: ", error);
+        showToast("Gagal menyimpan ke database Firebase!", "danger");
+      }
+    };
+  </script>
+
+  <!-- Sidebar & theme toggle scripts -->
+  <script>
+    // Theme switching logic
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      const loginUser = localStorage.getItem("loginUser") || "Admin";
+      document.getElementById("profileUsernameBadge").innerText = loginUser;
+
+      const icon = document.querySelector(".theme-toggle i");
+      if (savedTheme === "dark") {
+        icon.className = "fa-solid fa-sun";
+      } else {
+        icon.className = "fa-solid fa-moon";
+      }
+    });
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+      
+      document.documentElement.setAttribute("data-theme", nextTheme);
+      localStorage.setItem("theme", nextTheme);
+      
+      const icons = document.querySelectorAll(".theme-toggle i");
+      icons.forEach(icon => {
+        icon.className = nextTheme === "dark" ? "fa-solid fa-sun" : "fa-solid fa-moon";
+      });
+    }
+
+    // Mobile drawer actions
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      sidebar.classList.toggle("active");
+    }
+
+    // Safety logout handler
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("loginUser");
+      window.location.href = "index.html";
+    }
+
+    // Toast alert triggers
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toast");
+      const toastIcon = document.getElementById("toastIcon");
+      const toastMessage = document.getElementById("toastMessage");
+
+      toastMessage.innerText = message;
+      
+      toast.className = "alert-popup";
+      toastIcon.className = "fa-solid";
+
+      if (type === "success") {
+        toast.classList.add("success");
+        toastIcon.classList.add("fa-circle-check");
+      } else {
+        toast.classList.add("danger");
+        toastIcon.classList.add("fa-circle-xmark");
+      }
+
+      toast.classList.add("show");
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+  </script>
+
+</body>
+</html>
