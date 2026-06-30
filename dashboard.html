@@ -82,18 +82,18 @@
           <p>Status monitoring bendungan real-time</p>
         </div>
         <div class="top-bar-actions">
-          <div class="firebase-status-badge" id="firebaseStatus" style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 14px; font-size: 0.8rem; font-weight: 600; background: var(--panel-bg); border: 1px solid var(--panel-border); color: var(--text-muted); box-shadow: var(--shadow-main);">
+          <div class="firebase-status-badge" id="firebaseStatus" title="Status Database Firebase" style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 14px; font-size: 0.8rem; font-weight: 600; background: var(--panel-bg); border: 1px solid var(--panel-border); color: var(--text-muted); box-shadow: var(--shadow-main);">
             <i class="fa-solid fa-circle-notch fa-spin" style="color: var(--primary);"></i>
-            <span>Menghubungkan...</span>
+            <span class="badge-text">Menghubungkan...</span>
           </div>
           <button class="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">
             <i class="fa-solid fa-moon"></i>
           </button>
-          <div class="user-profile-badge">
+          <div class="user-profile-badge" title="Profil Pengguna">
             <div class="avatar-sm">
               <i class="fa-solid fa-user-shield"></i>
             </div>
-            <span id="profileUsername">Admin</span>
+            <span id="profileUsername" class="badge-text">Admin</span>
           </div>
         </div>
       </div>
@@ -196,10 +196,12 @@
       
       if (status === "connected") {
         badge.style.color = "var(--success)";
-        badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>Firebase Terhubung</span>`;
+        badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span class="badge-text">Firebase Terhubung</span>`;
+        badge.setAttribute("title", "Firebase Terhubung");
       } else if (status === "error") {
         badge.style.color = "var(--danger)";
-        badge.innerHTML = `<i class="fa-solid fa-circle-exclamation" title="${errorMsg}"></i> <span title="${errorMsg}">Firebase Error</span>`;
+        badge.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> <span class="badge-text" title="${errorMsg}">Firebase Error</span>`;
+        badge.setAttribute("title", "Firebase Error: " + errorMsg);
       }
     };
 
