@@ -1040,15 +1040,33 @@ body {
   }
   
   .top-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 25px;
   }
   
+  .top-bar .welcome-msg {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .top-bar .welcome-msg h2 {
+    font-size: 1.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .top-bar .welcome-msg p {
+    display: none;
+  }
+  
   .top-bar-actions {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
+    flex-shrink: 0;
+    justify-content: flex-end;
   }
 }
 
@@ -1093,8 +1111,21 @@ body {
   }
   
   /* Make top-bar actions compact on mobile */
+  .top-bar {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .top-bar .welcome-msg {
+    flex: 1;
+    min-width: 0;
+  }
+
   .top-bar-actions {
     gap: 8px;
+    flex-shrink: 0;
+    justify-content: flex-end;
   }
   
   /* Make cards fit better on narrow screens */
@@ -1108,7 +1139,10 @@ body {
   
   /* Adjust headings for mobile */
   .top-bar .welcome-msg h2 {
-    font-size: 1.6rem;
+    font-size: 1.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   .auth-header h1 {
