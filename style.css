@@ -121,22 +121,21 @@ body {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
   color: var(--text-main);
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   box-shadow: var(--shadow-main);
-  font-size: 1.2rem;
+  font-size: 1rem;
   transition: 0.3s;
 }
 
 .theme-toggle:hover {
-  background: var(--primary);
-  color: white;
-  transform: rotate(20deg) scale(1.05);
+  background: var(--primary-glow);
+  transform: translateY(-2px);
 }
 
 /* ==========================================================================
@@ -473,25 +472,47 @@ body {
 .top-bar-actions {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
+}
+
+.badge-text {
+  display: none !important;
+}
+
+.firebase-status-badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  box-shadow: var(--shadow-main);
+  font-size: 1.1rem;
+  transition: 0.3s;
+  cursor: pointer;
 }
 
 .user-profile-badge {
-  background: var(--panel-bg);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  padding: 8px 18px;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
   box-shadow: var(--shadow-main);
+  transition: 0.3s;
+  cursor: pointer;
 }
 
 .user-profile-badge .avatar-sm {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   background: var(--primary-glow);
   color: var(--primary);
   display: flex;
@@ -500,10 +521,9 @@ body {
   font-size: 1rem;
 }
 
-.user-profile-badge span {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-main);
+.firebase-status-badge:hover, .user-profile-badge:hover {
+  background: var(--primary-glow);
+  transform: translateY(-2px);
 }
 
 /* ==========================================================================
@@ -1036,58 +1056,45 @@ body {
    MOBILE RESPONSIVE OPTIMIZATIONS (Max width 480px)
    ========================================================================== */
 @media (max-width: 480px) {
-  /* Prevent horizontal overflow on dashboard water monitor */
+  /* Prevent horizontal overflow on dashboard water monitor while keeping them side-by-side (left/right) */
   .monitor-flex {
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .water-tank-wrapper {
+    gap: 8px;
+  }
+  
+  .water-tank {
+    width: 90px !important;
+    height: 200px !important;
+    border-radius: 16px !important;
+  }
+  
+  .tank-legend {
+    height: 200px !important;
+    font-size: 0.7rem !important;
   }
   
   .water-value-display {
-    align-items: center;
+    align-items: flex-start;
+  }
+  
+  .water-value-display .value {
+    font-size: 2.2rem !important;
+  }
+  
+  .water-value-display .value span {
+    font-size: 1.1rem !important;
   }
   
   /* Make top-bar actions compact on mobile */
   .top-bar-actions {
-    flex-wrap: nowrap;
-    justify-content: flex-end;
     gap: 8px;
-    width: auto;
-  }
-  
-  .badge-text {
-    display: none !important;
-  }
-  
-  .firebase-status-badge {
-    padding: 0 !important;
-    width: 38px !important;
-    height: 38px !important;
-    justify-content: center !important;
-    border-radius: 12px !important;
-    font-size: 1rem !important;
-  }
-  
-  .user-profile-badge {
-    padding: 0 !important;
-    width: 38px !important;
-    height: 38px !important;
-    justify-content: center !important;
-    border-radius: 12px !important;
-    gap: 0 !important;
-  }
-  
-  .user-profile-badge .avatar-sm {
-    width: 30px !important;
-    height: 30px !important;
-    border-radius: 8px !important;
-  }
-  
-  .theme-toggle {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 12px !important;
-    font-size: 0.95rem !important;
   }
   
   /* Make cards fit better on narrow screens */
