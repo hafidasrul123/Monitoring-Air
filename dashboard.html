@@ -299,13 +299,14 @@
 
     // Process & update UI with current water level
     // statusOverride: jika diisi, gunakan Status dari Firebase langsung
-    window.updateWaterLevelUI = (height, skipChartUpdate = false, statusOverride = null) => {
+    window.updateWaterLevelUI = (height, skipChartUpdate = true, statusOverride = null) => {
       // Boundary check
       height = Math.max(0, Math.min(batasMaksimal, height));
       
       // Store globally to allow instant re-renders when limits change
       window.lastWaterHeight = height;
       window.lastStatusOverride = statusOverride;
+      window.currentWaterHeightCm = Math.round(height * 100);
       
       const tinggiAirDisplay = document.getElementById("tinggiAirDisplay");
       const waterLevel = document.getElementById("waterLevel");
@@ -431,7 +432,7 @@
               .catch((err) => console.warn("Gagal menulis Status ke Firebase:", err));
 
             // Update UI level air
-            window.updateWaterLevelUI(heightM, false, statusDihitung);
+            window.updateWaterLevelUI(heightM, true, statusDihitung);
             
             // Clear fallback jika Firebase sudah aktif
             if (fallbackInterval) {
@@ -458,6 +459,13 @@
     document.addEventListener("DOMContentLoaded", () => {
       initChart();
       listenFirebase();
+
+      // Jalankan interval setiap 1 menit (60000 ms) untuk memperbarui grafik dengan nilai terbaru
+      setInterval(() => {
+        if (typeof window.currentWaterHeightCm !== "undefined") {
+          addChartData(window.currentWaterHeightCm);
+        }
+      }, 60000);
     });
 
   </script>
