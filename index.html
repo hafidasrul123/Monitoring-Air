@@ -132,9 +132,33 @@
       passwordEye.className = "fa-regular fa-eye password-toggle";
     }
   }
+</script>
 
+<!-- Firebase SDK V8 Compat (Works locally on file:// protocol without CORS blocking) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCLu-MifEZsFNFyiB3KTINe7kPadh6CPOE",
+    authDomain: "monitoringair-37c90.firebaseapp.com",
+    databaseURL: "https://monitoringair-37c90-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "monitoringair-37c90",
+    storageBucket: "monitoringair-37c90.firebasestorage.app",
+    messagingSenderId: "834586591493",
+    appId: "1:834586591493:web:c5acc63ebf14aff8c1f76c",
+    measurementId: "G-65DR1XRQHC"
+  };
+
+  // Initialize Firebase
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
+</script>
+
+<script>
   // Auth login code
-  function login() {
+  async function login() {
     let username = document.getElementById("loginUsername").value.trim();
     let password = document.getElementById("loginPassword").value.trim();
 
@@ -143,27 +167,45 @@
       return;
     }
 
-    let savedUsername = localStorage.getItem("username");
-    let savedPassword = localStorage.getItem("password");
+    try {
+      // Pengecekan khusus untuk fallback admin bawaan jika belum terdaftar di Firebase
+      if (username === "admin") {
+        const adminSnap = await db.ref("/users/admin").once("value");
+        if (!adminSnap.exists()) {
+          // Buat akun admin default secara otomatis di Firebase
+          await db.ref("/users/admin").set({
+            username: "admin",
+            password: "admin123"
+          });
+        }
+      }
 
-    // Default account if no register accounts exist yet
-    if (!savedUsername) {
-      // Auto-register default credentials for demo convenience
-      localStorage.setItem("username", "admin");
-      localStorage.setItem("password", "admin123");
-      savedUsername = "admin";
-      savedPassword = "admin123";
-    }
+      // Ambil data user dari Firebase
+      const snapshot = await db.ref("/users/" + username).once("value");
 
-    if (username === savedUsername && password === savedPassword) {
-      localStorage.setItem("loginUser", username);
-      showToast("Login berhasil! Mengalihkan...", "success");
-      
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 1200);
-    } else {
-      showToast("Username atau Password salah!", "danger");
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        
+        if (userData.password === password) {
+          // Login sukses
+          localStorage.setItem("loginUser", username);
+          localStorage.setItem("username", username); // Simpan untuk kompatibilitas
+          localStorage.setItem("password", password); // Simpan untuk kompatibilitas di halaman profil
+          
+          showToast("Login berhasil! Mengalihkan...", "success");
+          
+          setTimeout(() => {
+            window.location.href = "dashboard.html";
+          }, 1200);
+        } else {
+          showToast("Username atau Password salah!", "danger");
+        }
+      } else {
+        showToast("Username tidak terdaftar!", "danger");
+      }
+    } catch (error) {
+      console.error("Firebase login error: ", error);
+      showToast("Gagal terhubung ke Firebase: " + error.message, "danger");
     }
   }
 </script>

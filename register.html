@@ -139,9 +139,33 @@
       eye.className = "fa-regular fa-eye password-toggle";
     }
   }
+</script>
 
+<!-- Firebase SDK V8 Compat (Works locally on file:// protocol without CORS blocking) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCLu-MifEZsFNFyiB3KTINe7kPadh6CPOE",
+    authDomain: "monitoringair-37c90.firebaseapp.com",
+    databaseURL: "https://monitoringair-37c90-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "monitoringair-37c90",
+    storageBucket: "monitoringair-37c90.firebasestorage.app",
+    messagingSenderId: "834586591493",
+    appId: "1:834586591493:web:c5acc63ebf14aff8c1f76c",
+    measurementId: "G-65DR1XRQHC"
+  };
+
+  // Initialize Firebase
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
+</script>
+
+<script>
   // Registration process
-  function register() {
+  async function register() {
     let username = document.getElementById("username").value.trim();
     let password = document.getElementById("password").value.trim();
     let confirmPassword = document.getElementById("confirmPassword").value.trim();
@@ -161,14 +185,34 @@
       return;
     }
 
-    localStorage.setItem("username", username);
-    localStorage.setItem("password", password);
+    try {
+      // Cek apakah username sudah ada di database Firebase
+      const snapshot = await db.ref("/users/" + username).once("value");
+      if (snapshot.exists()) {
+        showToast("Username sudah digunakan!", "danger");
+        return;
+      }
 
-    showToast("Registrasi berhasil! Mengalihkan ke login...", "success");
+      // Simpan data user baru ke Firebase
+      await db.ref("/users/" + username).set({
+        username: username,
+        password: password
+      });
 
-    setTimeout(() => {
-      window.location.href = "index.html";
-    }, 1500);
+      // Tetap simpan ke localStorage untuk fallback/kecocokan kode lama jika diperlukan
+      localStorage.setItem("username", username);
+      localStorage.setItem("password", password);
+
+      showToast("Registrasi berhasil! Mengalihkan ke login...", "success");
+
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 1500);
+
+    } catch (error) {
+      console.error("Firebase register error: ", error);
+      showToast("Gagal menyimpan akun ke Firebase: " + error.message, "danger");
+    }
   }
 </script>
 

@@ -154,6 +154,28 @@
     </div>
   </div>
 
+  <!-- Firebase SDK V8 Compat (Works locally on file:// protocol without CORS blocking) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLu-MifEZsFNFyiB3KTINe7kPadh6CPOE",
+      authDomain: "monitoringair-37c90.firebaseapp.com",
+      databaseURL: "https://monitoringair-37c90-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "monitoringair-37c90",
+      storageBucket: "monitoringair-37c90.firebasestorage.app",
+      messagingSenderId: "834586591493",
+      appId: "1:834586591493:web:c5acc63ebf14aff8c1f76c",
+      measurementId: "G-65DR1XRQHC"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+  </script>
+
   <script>
     // Theme logic
     const savedTheme = localStorage.getItem("theme") || "light";
@@ -241,41 +263,59 @@
     }
 
     // Password modification logic
-    function ubahPassword() {
+    async function ubahPassword() {
       let oldPassword = document.getElementById("oldPassword").value.trim();
       let newPassword = document.getElementById("newPassword").value.trim();
       let confirmPassword = document.getElementById("confirmPassword").value.trim();
       
-      let savedPassword = localStorage.getItem("password") || "admin123";
+      let loginUser = localStorage.getItem("loginUser") || "Admin";
 
       if (!oldPassword || !newPassword || !confirmPassword) {
         showToast("Semua kolom harus diisi!", "danger");
         return;
       }
 
-      if (oldPassword !== savedPassword) {
-        showToast("Password lama salah!", "danger");
-        return;
+      try {
+        // Ambil data user saat ini dari Firebase
+        const snapshot = await db.ref("/users/" + loginUser).once("value");
+        let savedPassword = "admin123"; // default fallback jika tidak ada
+        
+        if (snapshot.exists()) {
+          savedPassword = snapshot.val().password;
+        }
+
+        if (oldPassword !== savedPassword) {
+          showToast("Password lama salah!", "danger");
+          return;
+        }
+
+        if (newPassword.length < 5) {
+          showToast("Password baru minimal 5 karakter!", "danger");
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          showToast("Konfirmasi password baru tidak cocok!", "danger");
+          return;
+        }
+
+        // Simpan pembaruan password ke Firebase
+        await db.ref("/users/" + loginUser + "/password").set(newPassword);
+        
+        // Tetap simpan ke localStorage untuk konsistensi lokal
+        localStorage.setItem("password", newPassword);
+        
+        showToast("Password berhasil diubah!", "success");
+
+        // Reset values
+        document.getElementById("oldPassword").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
+
+      } catch (error) {
+        console.error("Firebase update password error: ", error);
+        showToast("Gagal mengubah password di Firebase: " + error.message, "danger");
       }
-
-      if (newPassword.length < 5) {
-        showToast("Password baru minimal 5 karakter!", "danger");
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        showToast("Konfirmasi password baru tidak cocok!", "danger");
-        return;
-      }
-
-      // Save password update
-      localStorage.setItem("password", newPassword);
-      showToast("Password berhasil diubah!", "success");
-
-      // Reset values
-      document.getElementById("oldPassword").value = "";
-      document.getElementById("newPassword").value = "";
-      document.getElementById("confirmPassword").value = "";
     }
   </script>
 
