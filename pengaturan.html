@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pengaturan Ketinggian - Monitoring Ketinggian Air Bendungan</title>
+  <title>Pengaturan Ketinggian - Monitoring Ketinggian Air Dam</title>
 
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -48,13 +48,9 @@
           <span>Monitoring Ketinggian Air Dam</span>
         </div>
         <div class="sidebar-menu">
-          <a href="dashboard.html">
-            <i class="fa-solid fa-house"></i>
-            <span>Dashboard</span>
-          </a>
           <a href="#" class="active">
             <i class="fa-solid fa-sliders"></i>
-            <span>Pengaturan</span>
+            <span>Pengaturan Ambang Batas</span>
           </a>
           <a href="profil.html">
             <i class="fa-solid fa-user"></i>
@@ -77,7 +73,7 @@
       <div class="top-bar">
         <div class="welcome-msg">
           <h2>Pengaturan Ambang Batas</h2>
-          <p>Konfigurasi parameter level Aman, Waspada, dan Bahaya</p>
+          <p>Konfigurasi parameter level Aman dan Bahaya</p>
         </div>
         <div class="top-bar-actions">
           <button class="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">
@@ -95,12 +91,10 @@
       <!-- Settings Layout -->
       <div style="max-width: 700px; margin: 0 auto;">
         <div class="glass-card">
-          <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 25px;">
+          <h3 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 25px;">
             <i class="fa-solid fa-gear" style="color: var(--primary); margin-right: 10px;"></i>
             Pengaturan Parameter Ketinggian Air
           </h3>
-          
-
 
           <div class="form-group" style="margin-bottom: 20px;">
             <label class="form-label" for="batasBahaya">Batas Bahaya (cm)</label>
@@ -108,7 +102,7 @@
               <i class="fa-solid fa-circle-xmark input-icon" style="color: var(--danger);"></i>
               <input type="number" id="batasBahaya" step="1" min="1" placeholder="Contoh: 400">
             </div>
-            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 4px;">
+            <span style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 4px;">
               Ketinggian air di atas batas ini akan memicu status <b>Bahaya</b>.
             </span>
           </div>
@@ -119,7 +113,7 @@
               <i class="fa-solid fa-water input-icon" style="color: var(--primary);"></i>
               <input type="number" id="batasMaksimal" step="1" min="1" placeholder="Contoh: 500">
             </div>
-            <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 4px;">
+            <span style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 4px;">
               Batas ketinggian <b>maksimal</b> (mentok atas) dari visualisasi dam.
             </span>
           </div>
@@ -133,7 +127,7 @@
     </div>
   </div>
 
-  <!-- Firebase SDK V8 Compat (Works locally on file:// protocol without CORS blocking) -->
+  <!-- Firebase SDK V8 Compat -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script>
@@ -148,7 +142,6 @@
       measurementId: "G-65DR1XRQHC"
     };
 
-    // Initialize Firebase
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
@@ -159,7 +152,7 @@
     const inputBahaya = document.getElementById("batasBahaya");
     const inputMaksimal = document.getElementById("batasMaksimal");
 
-    // Load settings from Firebase on page load (nilai disimpan dalam cm)
+    // Load settings
     try {
       const settingsRef = db.ref("/settings");
       settingsRef.on("value", (snapshot) => {
@@ -168,18 +161,16 @@
           inputBahaya.value = data.bahaya || 400;
           inputMaksimal.value = data.maksimal || 500;
         } else {
-          // Default jika belum ada data
           inputBahaya.value = 400;
           inputMaksimal.value = 500;
         }
       });
     } catch (e) {
-      console.error("Firebase read settings failed, using defaults", e);
       inputBahaya.value = 400;
       inputMaksimal.value = 500;
     }
 
-    // Simpan pengaturan ke Firebase (nilai dalam cm, bilangan bulat)
+    // Save settings
     window.simpanPengaturan = async function() {
       const bahayaVal = parseInt(inputBahaya.value);
       const maksimalVal = parseInt(inputMaksimal.value);
@@ -188,26 +179,22 @@
         showToast("Kolom harus diisi angka yang valid!", "danger");
         return;
       }
-
       if (bahayaVal <= 0 || maksimalVal <= 0) {
         showToast("Batas ketinggian harus lebih besar dari 0 cm!", "danger");
         return;
       }
-
       if (bahayaVal >= maksimalVal) {
         showToast("Kapasitas Maksimal Dam harus lebih tinggi dari batas Bahaya!", "danger");
         return;
       }
 
       try {
-        // Simpan dalam satuan cm
         await db.ref("/settings").set({
           bahaya: bahayaVal,
           maksimal: maksimalVal
         });
         showToast(`Pengaturan disimpan! Bahaya: ${bahayaVal}cm, Maksimal: ${maksimalVal}cm`, "success");
       } catch (error) {
-        console.error("Firebase write error: ", error);
         showToast("Gagal menyimpan ke database Firebase!", "danger");
       }
     };
@@ -215,12 +202,18 @@
 
   <!-- Sidebar & theme toggle scripts -->
   <script>
-    // Theme switching logic
     const savedTheme = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-theme", savedTheme);
     
     document.addEventListener("DOMContentLoaded", () => {
-      const loginUser = localStorage.getItem("loginUser") || "Admin";
+      // Session Guard
+      const loginUser = localStorage.getItem("loginUser");
+      const isAdmin   = localStorage.getItem("isAdmin") === "true";
+      if (!loginUser || !isAdmin) {
+        window.location.href = "index.html";
+        return;
+      }
+
       document.getElementById("profileUsernameBadge").innerText = loginUser;
 
       const icon = document.querySelector(".theme-toggle i");
@@ -244,27 +237,26 @@
       });
     }
 
-    // Mobile drawer actions
     function toggleSidebar() {
       const sidebar = document.getElementById("sidebar");
       sidebar.classList.toggle("active");
     }
 
-    // Safety logout handler
     function logout(e) {
       e.preventDefault();
       localStorage.removeItem("loginUser");
+      localStorage.removeItem("isAdmin");
+      localStorage.removeItem("username");
+      localStorage.removeItem("password");
       window.location.href = "index.html";
     }
 
-    // Toast alert triggers
     function showToast(message, type = "success") {
       const toast = document.getElementById("toast");
       const toastIcon = document.getElementById("toastIcon");
       const toastMessage = document.getElementById("toastMessage");
 
       toastMessage.innerText = message;
-      
       toast.className = "alert-popup";
       toastIcon.className = "fa-solid";
 

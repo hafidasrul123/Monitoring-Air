@@ -5,6 +5,10 @@
 :root {
   /* Font Family */
   --font-main: 'Poppins', sans-serif;
+  /* Base font sizes */
+  --font-base: 18.4px;    /* base utama */
+  --font-sm:   15px;      /* sekunder / label kecil */
+  --font-xs:   13px;      /* muted / caption */
 
   /* Colors - Light Theme (Default) */
   --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #dbeafe 100%);
@@ -74,6 +78,7 @@
 
 body {
   min-height: 100vh;
+  font-size: var(--font-base);
   color: var(--text-main);
   background: var(--bg-gradient);
   background-attachment: fixed;
@@ -190,7 +195,7 @@ body {
 }
 
 .auth-header h1 {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
   line-height: 1.3;
   margin-bottom: 8px;
@@ -199,7 +204,7 @@ body {
 
 .auth-header p {
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: var(--font-sm);
   letter-spacing: 2px;
   text-transform: uppercase;
   font-weight: 500;
@@ -213,7 +218,7 @@ body {
 
 .form-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 1.5px;
@@ -241,7 +246,7 @@ body {
   border: 2px solid var(--border-light);
   border-radius: 16px;
   padding: 0 20px 0 52px;
-  font-size: 0.95rem;
+  font-size: var(--font-base);
   color: var(--text-main);
   outline: none;
   transition: all 0.3s ease;
@@ -279,7 +284,7 @@ body {
   color: white;
   border: none;
   border-radius: 16px;
-  font-size: 1.05rem;
+  font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 8px 20px var(--primary-glow);
@@ -304,7 +309,7 @@ body {
   text-align: center;
   margin-top: 25px;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: var(--font-sm);
 }
 
 .auth-footer a {
@@ -361,7 +366,7 @@ body {
 }
 
 .sidebar-logo span {
-  font-size: 1.15rem;
+  font-size: var(--font-base);
   font-weight: 700;
   color: var(--text-main);
   line-height: 1.3;
@@ -382,7 +387,7 @@ body {
   padding: 14px 18px;
   border-radius: 14px;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: var(--font-base);
   transition: all 0.3s ease;
 }
 
@@ -446,6 +451,36 @@ body {
   transition: margin-left 0.4s ease;
 }
 
+/* Login Admin Button in top-bar (for public visitors) */
+.btn-login-admin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 0 18px;
+  height: 38px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 6px 18px var(--primary-glow);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-login-admin i {
+  font-size: 1rem;
+}
+
+.btn-login-admin:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px var(--primary-glow);
+}
+
 /* ==========================================================================
    TOP BAR HEADER (USER PROFILE, STATUS)
    ========================================================================== */
@@ -458,14 +493,14 @@ body {
 }
 
 .top-bar .welcome-msg h2 {
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   font-weight: 800;
   letter-spacing: -0.5px;
 }
 
 .top-bar .welcome-msg p {
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: var(--font-sm);
   margin-top: 4px;
 }
 
@@ -552,7 +587,7 @@ body {
 }
 
 .water-monitor-card h3 {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 700;
   margin-bottom: 25px;
   align-self: flex-start;
@@ -593,7 +628,7 @@ body {
   flex-direction: column;
   justify-content: space-between;
   height: 250px;
-  font-size: 0.75rem;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--text-muted);
   text-align: right;
@@ -720,7 +755,7 @@ body {
 }
 
 .water-value-display .label {
-  font-size: 0.85rem;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -740,7 +775,7 @@ body {
 }
 
 .status-indicator-box .status-lbl {
-  font-size: 0.9rem;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -749,7 +784,7 @@ body {
   padding: 8px 18px;
   border-radius: 12px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: var(--font-base);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -857,7 +892,7 @@ body {
 }
 
 .mini-card-info h4 {
-  font-size: 0.8rem;
+  font-size: var(--font-xs);
   color: var(--text-muted);
   font-weight: 600;
   text-transform: uppercase;
@@ -865,14 +900,14 @@ body {
 }
 
 .mini-card-info p {
-  font-size: 1.25rem;
+  font-size: var(--font-base);
   font-weight: 700;
   margin-top: 2px;
 }
 
 /* Chart Card Style */
 .chart-card h3 {
-  font-size: 1.2rem;
+  font-size: 1.6rem;
   font-weight: 700;
   margin-bottom: 20px;
   display: flex;
@@ -886,7 +921,7 @@ body {
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   padding: 4px 10px;
-  font-size: 0.8rem;
+  font-size: var(--font-xs);
   font-weight: 600;
   outline: none;
   cursor: pointer;
@@ -939,14 +974,14 @@ body {
 }
 
 .profile-sidebar-card h3 {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
 .profile-sidebar-card p {
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: var(--font-sm);
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -966,7 +1001,7 @@ body {
 .profile-detail-item {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: var(--font-base);
 }
 
 .profile-detail-item .lbl {
@@ -980,7 +1015,7 @@ body {
 }
 
 .security-card h3 {
-  font-size: 1.3rem;
+  font-size: 1.6rem;
   font-weight: 700;
   margin-bottom: 25px;
 }

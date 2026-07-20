@@ -1,142 +1,763 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Login - Monitoring Ketinggian Air Bendungan Berbasis IoT</title>
+  <title>Login Admin - Monitoring Ketinggian Air Dam Berbasis IoT</title>
 
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="style.css">
-  <!-- Disable desktop zoom -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="disable-zoom.js"></script>
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS — DARK & LIGHT
+    ============================================================ */
+     :root {
+      /* shared */
+      --radius:         20px;
+      --radius-sm:      12px;
+      --font:           'Poppins', sans-serif;
+    }
+
+    /* DARK THEME (default) */
+    [data-theme="dark"] {
+      --bg:             linear-gradient(135deg, #0b0f19 0%, #111827 100%);
+      --panel-bg:       rgba(17, 24, 39, 0.65);
+      --panel-bg-solid: rgba(17, 24, 39, 0.9);
+      --panel-border:   rgba(255, 255, 255, 0.05);
+      --divider:        rgba(255, 255, 255, 0.05);
+
+      --text:           #f3f4f6;
+      --text-sub:       #9ca3af;
+      --text-muted:     #9ca3af;
+
+      --primary:        #3b82f6;
+      --primary-hover:  #60a5fa;
+      --primary-glow:   rgba(59, 130, 246, 0.35);
+
+      --success:        #34d399;
+      --success-glow:   rgba(52, 211, 153, 0.35);
+      --danger:         #f87171;
+      --danger-glow:    rgba(248, 113, 113, 0.35);
+
+      --input-bg:       rgba(255, 255, 255, 0.05);
+      --input-border:   rgba(255, 255, 255, 0.05);
+      --input-focus:    rgba(59, 130, 246, 0.35);
+
+      --shadow:         0 10px 35px -10px rgba(0, 0, 0, 0.3);
+      --wave-col:       rgba(255, 255, 255, 0.05);
+    }
+
+    /* LIGHT THEME */
+    [data-theme="light"] {
+      --bg:             linear-gradient(135deg, #f0f4f8 0%, #dbeafe 100%);
+      --panel-bg:       rgba(255, 255, 255, 0.7);
+      --panel-bg-solid: rgba(255, 255, 255, 0.95);
+      --panel-border:   rgba(255, 255, 255, 0.6);
+      --divider:        rgba(226, 232, 240, 0.8);
+
+      --text:           #1e293b;
+      --text-sub:       #64748b;
+      --text-muted:     #64748b;
+
+      --primary:        #2563eb;
+      --primary-hover:  #1d4ed8;
+      --primary-glow:   rgba(37, 99, 235, 0.25);
+
+      --success:        #10b981;
+      --success-glow:   rgba(16, 185, 129, 0.25);
+      --danger:         #ef4444;
+      --danger-glow:    rgba(239, 68, 68, 0.25);
+
+      --input-bg:       rgba(255, 255, 255, 0.5);
+      --input-border:   rgba(226, 232, 240, 0.8);
+      --input-focus:    rgba(37, 99, 235, 0.25);
+
+      --shadow:         0 10px 30px -10px rgba(0, 0, 0, 0.08);
+      --wave-col:       rgba(226, 232, 240, 0.5);
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+    }
+    body, input, button, select, textarea {
+      font-family: var(--font);
+    }
+    * {
+      transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+    }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+    }
+
+    /* ============================================================
+       TOAST
+    ============================================================ */
+    .alert-popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--panel-bg-solid);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 13px 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+      white-space: nowrap;
+    }
+    .alert-popup.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .alert-popup.success i { color: var(--success); }
+    .alert-popup.danger  i { color: var(--danger); }
+
+    /* ============================================================
+       SPLIT WRAPPER
+    ============================================================ */
+    .split {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+      position: relative;
+    }
+
+    /* ============================================================
+       THEME TOGGLE — top right absolute
+    ============================================================ */
+    .theme-btn {
+      position: fixed;
+      top: 22px;
+      right: 28px;
+      z-index: 100;
+      width: 42px; height: 42px;
+      border-radius: var(--radius-sm);
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex; justify-content: center; align-items: center;
+      box-shadow: var(--shadow);
+      transition: all 0.3s;
+    }
+    .theme-btn:hover {
+      background: var(--primary-glow);
+      transform: translateY(-2px) rotate(15deg);
+    }
+
+    /* ============================================================
+       LEFT PANEL — Live Preview
+    ============================================================ */
+    .left-panel {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      padding: 36px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Blobs — dark only */
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%);
+      top: -120px; left: -100px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%);
+      bottom: -80px; right: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Brand */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      z-index: 1;
+      position: relative;
+    }
+    .brand i {
+      font-size: 1.9rem;
+      color: var(--primary);
+      filter: drop-shadow(0 0 12px var(--primary-glow));
+    }
+    .brand-text .title {
+      font-size: 18.4px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .brand-text .sub {
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    /* Mini dashboard glass card */
+    .preview-card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--panel-border);
+      border-radius: 22px;
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      z-index: 1;
+      position: relative;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* Preview header */
+    .prev-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .prev-header-left h2 {
+      font-size: 18.4px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .prev-header-left p {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+    .prev-header-left i.drop {
+      font-size: 1.3rem;
+      color: var(--primary);
+      filter: drop-shadow(0 0 6px var(--primary-glow));
+      margin-right: 8px;
+    }
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--success);
+      background: rgba(52,211,153,0.12);
+      border: 1px solid rgba(52,211,153,0.25);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .live-badge i { font-size: 0.55rem; animation: blink 1.4s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* Mini two-col grid */
+    .prev-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.8fr;
+      gap: 14px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Inner glass sub-card */
+    .sub-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sub-title {
+      font-size: 18.4px;
+      font-weight: 700;
+      color: var(--text);
+      padding-left: 8px;
+      border-left: 3px solid var(--primary);
+      opacity: 0.85;
+    }
+
+    /* Mini tank */
+    .tank-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+    .mini-legend {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 220px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: right;
+    }
+    .mini-legend span::after {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 1px;
+      background: var(--text-muted);
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+    .mini-tank {
+      width: 90px; height: 220px;
+      border: 3px solid var(--panel-border);
+      border-radius: 18px;
+      background: rgba(0,0,0,0.15);
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+      box-shadow: inset 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .mini-fill {
+      position: absolute;
+      bottom: 0; left: 0; width: 100%;
+      transition: height 0.9s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column; justify-content: flex-start;
+    }
+    .mini-fill.aman {
+      background: linear-gradient(180deg, rgba(16,185,129,0.85) 0%, rgba(6,95,70,0.95) 100%);
+      box-shadow: 0 0 16px rgba(16,185,129,0.4);
+    }
+    .mini-fill.bahaya {
+      background: linear-gradient(180deg, rgba(239,68,68,0.85) 0%, rgba(153,27,27,0.95) 100%);
+      box-shadow: 0 0 16px rgba(239,68,68,0.4);
+    }
+    .mini-fill svg {
+      width: 100%; height: 13px;
+      position: absolute; top: -11px; left: 0;
+    }
+    .mini-fill svg path { animation: wave 4s linear infinite; }
+    .mini-fill svg path:nth-child(2) { opacity: 0.4; animation: wave 2.5s linear infinite reverse; }
+    @keyframes wave { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+    .mini-val { display: flex; flex-direction: column; justify-content: center; }
+    .mini-val .big {
+      font-size: 3.2rem; font-weight: 800; color: var(--text); line-height: 1;
+    }
+    .mini-val .big span { font-size: 1.3rem; font-weight: 500; color: var(--text-sub); }
+    .mini-val .lbl {
+      font-size: 13px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.8px; margin-top: 5px;
+    }
+    .mini-val .time { font-size: 13px; color: var(--text-muted); margin-top: 7px; }
+
+    .mini-status-row {
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--divider);
+      padding-top: 8px; margin-top: auto;
+    }
+    .mini-status-lbl { font-size: 13px; font-weight: 600; color: var(--text-sub); }
+    .mini-badge {
+      font-size: 13px; font-weight: 700;
+      padding: 3px 9px; border-radius: 7px;
+      text-transform: uppercase; display: flex; align-items: center; gap: 4px;
+    }
+    .mini-badge::before {
+      content: ''; width: 5px; height: 5px; border-radius: 50%;
+    }
+    .mini-badge.aman { background: rgba(52,211,153,0.12); color: var(--success); }
+    .mini-badge.aman::before { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .mini-badge.bahaya { background: rgba(248,113,113,0.12); color: var(--danger); }
+    .mini-badge.bahaya::before { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+
+    /* Mini chart */
+    .sub-chart { flex: 1; min-height: 220px; position: relative; }
+
+    /* Caption */
+    .prev-caption {
+      font-size: 13px;
+      color: var(--text-sub);
+      z-index: 1;
+      position: relative;
+    }
+    .prev-caption strong { color: var(--text); }
+
+    /* ============================================================
+       RIGHT PANEL — Login Form
+    ============================================================ */
+    .right-panel {
+      flex: 0 0 400px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 50px 38px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-left: 1px solid var(--panel-border);
+      position: relative;
+    }
+
+    .form-inner { width: 100%; max-width: 340px; }
+
+    /* Auth header */
+    .auth-hd { margin-bottom: 32px; }
+    .auth-hd .icon {
+      font-size: 2.2rem;
+      color: var(--primary);
+      filter: drop-shadow(0 0 14px var(--primary-glow));
+      display: block;
+      margin-bottom: 14px;
+    }
+    .auth-hd h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .auth-hd p {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Form group */
+    .fg { margin-bottom: 20px; }
+    .fg label {
+      display: block;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .inp-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .inp-wrap i.ic {
+      position: absolute;
+      left: 18px;
+      color: var(--primary);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+    .inp-wrap input {
+      width: 100%;
+      height: 52px;
+      background: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      border-radius: var(--radius-sm);
+      padding: 0 18px 0 48px;
+      font-size: 18.4px;
+      color: var(--text);
+      outline: none;
+      transition: all 0.3s;
+    }
+    .inp-wrap input::placeholder { color: var(--text-muted); }
+    .inp-wrap input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--input-focus);
+      background: var(--panel-bg-solid);
+    }
+    .eye-btn {
+      position: absolute;
+      right: 16px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: color 0.2s;
+    }
+    .eye-btn:hover { color: var(--primary); }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%;
+      height: 52px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 18.4px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex; justify-content: center; align-items: center; gap: 10px;
+      box-shadow: 0 8px 24px var(--primary-glow);
+      transition: all 0.3s;
+      letter-spacing: 0.3px;
+    }
+    .btn-submit:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px var(--primary-glow);
+    }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* Footer note */
+    .auth-note {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+    .auth-note i { color: var(--primary); margin-right: 5px; }
+    .auth-note strong { color: var(--text-sub); }
+
+    /* Divider wave between panels */
+    .panel-wave {
+      width: 1px;
+      background: var(--panel-border);
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 960px) {
+      html, body { overflow: auto; }
+      .split { flex-direction: column; height: auto; min-height: 100vh; }
+      .left-panel { padding: 28px 24px; min-height: 55vh; }
+      .right-panel {
+        flex: none; width: 100%;
+        padding: 36px 24px;
+        border-left: none;
+        border-top: 1px solid var(--panel-border);
+      }
+      .theme-btn { top: 14px; right: 16px; }
+    }
+    @media (max-width: 600px) {
+      .prev-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Toast Notification -->
+  <!-- Toast -->
   <div id="toast" class="alert-popup">
     <i id="toastIcon" class="fa-solid"></i>
     <span id="toastMessage"></span>
   </div>
 
-  <div class="auth-wrapper">
-    <!-- Decorative background elements -->
-    <div class="auth-bg-deco top-left"></div>
-    <div class="auth-bg-deco bottom-right"></div>
+  <!-- Theme toggle button -->
+  <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Ubah Tema">
+    <i class="fa-solid fa-moon" id="themeIcon"></i>
+  </button>
 
-    <!-- Theme Switcher floating in the top right corner -->
-    <div style="position: absolute; top: 25px; right: 25px; z-index: 10;">
-      <button class="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">
-        <i class="fa-solid fa-moon"></i>
-      </button>
-    </div>
+  <div class="split">
 
-    <div class="auth-card glass-card">
-      <div class="auth-header">
-        <i class="fa-solid fa-droplet app-icon"></i>
-        <h1>Monitoring Bendungan</h1>
-        <p>Sistem Real-Time IoT</p>
-      </div>
+    <!-- ======================================================
+         LEFT: Live Monitoring Preview
+    ====================================================== -->
+    <div class="left-panel">
 
-      <div class="form-group">
-        <label class="form-label" for="loginUsername">Username</label>
-        <div class="input-container">
-          <i class="fa-regular fa-user input-icon"></i>
-          <input type="text" id="loginUsername" placeholder="Masukkan Username" autocomplete="username">
+      <div class="brand">
+        <i class="fa-solid fa-droplet"></i>
+        <div class="brand-text">
+          <div class="title">Monitoring Ketinggian Air Dam</div>
+          <div class="sub">Sistem Pemantauan Real-Time IoT</div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="loginPassword">Password</label>
-        <div class="input-container">
-          <i class="fa-solid fa-lock input-icon"></i>
-          <input type="password" id="loginPassword" placeholder="Masukkan Password" autocomplete="current-password">
-          <i class="fa-regular fa-eye password-toggle" onclick="togglePasswordVisibility()" id="passwordEye"></i>
+      <div class="preview-card">
+        <!-- Header -->
+        <div class="prev-header">
+          <div class="prev-header-left">
+            <i class="fa-solid fa-droplet drop"></i>
+            <span style="display:inline;">
+              <h2 style="display:inline; font-size:18.4px;">Monitoring Ketinggian Air</h2><br>
+              <p style="display:inline; font-size:13px; color:var(--text-sub);">Dam Pemantauan Real-Time IoT</p>
+            </span>
+          </div>
+          <div class="live-badge">
+            <i class="fa-solid fa-circle"></i> Live
+          </div>
+        </div>
+
+        <!-- Grid: tank + chart -->
+        <div class="prev-grid">
+
+          <!-- Tank sub-card -->
+          <div class="sub-card">
+            <div class="sub-title">Monitoring Level Air</div>
+            <div class="tank-row">
+              <div class="mini-legend" id="previewLegend">
+                <span>200cm</span><span>160cm</span><span>120cm</span>
+                <span>80cm</span><span>40cm</span><span>0cm</span>
+              </div>
+              <div class="mini-tank">
+                <div class="mini-fill aman" id="previewFill" style="height:55%;">
+                  <svg viewBox="0 0 60 14" preserveAspectRatio="none">
+                    <path d="M0,9 C15,3 45,12 60,9 L60,14 L0,14 Z" fill="currentColor"></path>
+                    <path d="M0,9 C20,12 40,3 60,9 L60,14 L0,14 Z" fill="currentColor" opacity="0.4"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="mini-val">
+                <div class="big" id="previewHeight">--<span>cm</span></div>
+                <div class="lbl">Ketinggian Air</div>
+                <div class="time" id="previewTime">Menghubungkan...</div>
+              </div>
+            </div>
+            <div class="mini-status-row">
+              <span class="mini-status-lbl">Status:</span>
+              <span class="mini-badge aman" id="previewBadge">Aman</span>
+            </div>
+          </div>
+
+          <!-- Chart sub-card -->
+          <div class="sub-card">
+            <div class="sub-title">Tren Ketinggian Air</div>
+            <div class="sub-chart">
+              <canvas id="previewChart"></canvas>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <button class="btn-primary" onclick="login()">
-        Masuk <i class="fa-solid fa-arrow-right-to-bracket"></i>
-      </button>
+      <div class="prev-caption" style="margin-top:14px;">
+        Data ditampilkan secara <strong>real-time</strong> dari sensor IoT di dam.
+      </div>
 
-      <div class="auth-footer">
-        Belum punya akun? <a href="register.html">Daftar di sini</a>
+    </div>
+
+    <!-- ======================================================
+         RIGHT: Login Form
+    ====================================================== -->
+    <div class="right-panel">
+      <div class="form-inner">
+
+        <div class="auth-hd">
+          <i class="fa-solid fa-user-shield icon"></i>
+          <h1>Login Admin</h1>
+          <p>Akses Khusus Administrator</p>
+        </div>
+
+        <div class="fg">
+          <label for="loginUsername">Username</label>
+          <div class="inp-wrap">
+            <i class="fa-regular fa-user ic"></i>
+            <input type="text" id="loginUsername" placeholder="Masukkan Username" autocomplete="username">
+          </div>
+        </div>
+
+        <div class="fg">
+          <label for="loginPassword">Password</label>
+          <div class="inp-wrap">
+            <i class="fa-solid fa-lock ic"></i>
+            <input type="password" id="loginPassword" placeholder="Masukkan Password"
+              autocomplete="current-password" onkeydown="if(event.key==='Enter') login()">
+            <i class="fa-regular fa-eye eye-btn" id="eyeBtn" onclick="togglePw()"></i>
+          </div>
+        </div>
+
+        <button class="btn-submit" onclick="login()">
+          Masuk <i class="fa-solid fa-arrow-right-to-bracket"></i>
+        </button>
+
+        <div class="auth-note">
+          <i class="fa-solid fa-shield-halved"></i>
+          Halaman ini hanya untuk <strong>Administrator</strong>
+        </div>
+
       </div>
     </div>
-  </div>
+
+  </div><!-- end .split -->
 
 <script>
-  // Theme Initialization & Logic
-  const savedTheme = localStorage.getItem("theme") || "light";
-  document.documentElement.setAttribute("data-theme", savedTheme);
-  
-  // Set correct icon on load
-  document.addEventListener("DOMContentLoaded", () => {
-    const icon = document.querySelector(".theme-toggle i");
-    if (savedTheme === "dark") {
-      icon.className = "fa-solid fa-sun";
-    } else {
-      icon.className = "fa-solid fa-moon";
+  /* ============================================================
+     THEME SYSTEM
+  ============================================================ */
+  const THEME_KEY = "theme";
+  const saved = localStorage.getItem(THEME_KEY) || "dark";
+  applyTheme(saved);
+
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    localStorage.setItem(THEME_KEY, t);
+    const icon = document.getElementById("themeIcon");
+    if (icon) icon.className = t === "dark" ? "fa-solid fa-sun" : "fa-solid fa-moon";
+    // Update chart colors if chart exists
+    if (window.previewChart && window.previewChart.options) {
+      const tickColor = t === "dark" ? "rgba(255,255,255,0.4)" : "rgba(15,23,42,0.45)";
+      const gridColor = t === "dark" ? "rgba(255,255,255,0.07)" : "rgba(15,23,42,0.08)";
+      window.previewChart.options.scales.y.ticks.color = tickColor;
+      window.previewChart.options.scales.x.ticks.color = tickColor;
+      window.previewChart.options.scales.y.grid.color  = gridColor;
+      
+      const primaryColor = t === "dark" ? "#3b82f6" : "#2563eb";
+      window.previewChart.data.datasets[0].borderColor = primaryColor;
+      window.previewChart.data.datasets[0].pointBackgroundColor = primaryColor;
+      window.previewChart.update();
     }
-  });
+  }
 
   function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    const nextTheme = currentTheme === "dark" ? "light" : "dark";
-    
-    document.documentElement.setAttribute("data-theme", nextTheme);
-    localStorage.setItem("theme", nextTheme);
-    
-    const icon = document.querySelector(".theme-toggle i");
-    icon.className = nextTheme === "dark" ? "fa-solid fa-sun" : "fa-solid fa-moon";
+    const current = document.documentElement.getAttribute("data-theme");
+    applyTheme(current === "dark" ? "light" : "dark");
   }
 
-  // Toast alert system
-  function showToast(message, type = "success") {
+  /* ============================================================
+     TOAST
+  ============================================================ */
+  function showToast(msg, type = "success") {
     const toast = document.getElementById("toast");
-    const toastIcon = document.getElementById("toastIcon");
-    const toastMessage = document.getElementById("toastMessage");
-
-    toastMessage.innerText = message;
-    
-    // Reset classes
-    toast.className = "alert-popup";
-    toastIcon.className = "fa-solid";
-
-    if (type === "success") {
-      toast.classList.add("success");
-      toastIcon.classList.add("fa-circle-check");
-    } else {
-      toast.classList.add("danger");
-      toastIcon.classList.add("fa-circle-xmark");
-    }
-
+    const icon  = document.getElementById("toastIcon");
+    const span  = document.getElementById("toastMessage");
+    span.innerText = msg;
+    toast.className = "alert-popup " + type;
+    icon.className  = "fa-solid " + (type === "success" ? "fa-circle-check" : "fa-circle-xmark");
     toast.classList.add("show");
-
-    setTimeout(() => {
-      toast.classList.remove("show");
-    }, 3000);
+    setTimeout(() => toast.classList.remove("show"), 3000);
   }
 
-  // Password visibility toggle
-  function togglePasswordVisibility() {
-    const passwordInput = document.getElementById("loginPassword");
-    const passwordEye = document.getElementById("passwordEye");
-    
-    if (passwordInput.type === "password") {
-      passwordInput.type = "text";
-      passwordEye.className = "fa-regular fa-eye-slash password-toggle";
+  /* ============================================================
+     PASSWORD TOGGLE
+  ============================================================ */
+  function togglePw() {
+    const inp = document.getElementById("loginPassword");
+    const eye = document.getElementById("eyeBtn");
+    if (inp.type === "password") {
+      inp.type = "text";
+      eye.className = "fa-regular fa-eye-slash eye-btn";
     } else {
-      passwordInput.type = "password";
-      passwordEye.className = "fa-regular fa-eye password-toggle";
+      inp.type = "password";
+      eye.className = "fa-regular fa-eye eye-btn";
     }
   }
 </script>
 
-<!-- Firebase SDK V8 Compat (Works locally on file:// protocol without CORS blocking) -->
+<!-- Firebase SDK V8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
@@ -150,66 +771,202 @@
     appId: "1:834586591493:web:c5acc63ebf14aff8c1f76c",
     measurementId: "G-65DR1XRQHC"
   };
-
-  // Initialize Firebase
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 </script>
 
 <script>
-  // Auth login code
+  /* ============================================================
+     LOGIN LOGIC
+  ============================================================ */
   async function login() {
-    let username = document.getElementById("loginUsername").value.trim();
-    let password = document.getElementById("loginPassword").value.trim();
+    const username = document.getElementById("loginUsername").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
 
     if (!username || !password) {
-      showToast("Semua kolom harus diisi!", "danger");
-      return;
+      showToast("Semua kolom harus diisi!", "danger"); return;
+    }
+    if (username !== "admin") {
+      showToast("Akses ditolak! Hanya admin yang boleh login.", "danger"); return;
     }
 
     try {
-      // Pengecekan khusus untuk fallback admin bawaan jika belum terdaftar di Firebase
-      if (username === "admin") {
-        const adminSnap = await db.ref("/users/admin").once("value");
-        if (!adminSnap.exists()) {
-          // Buat akun admin default secara otomatis di Firebase
-          await db.ref("/users/admin").set({
-            username: "admin",
-            password: "admin123"
-          });
-        }
+      const adminSnap = await db.ref("/users/admin").once("value");
+      if (!adminSnap.exists()) {
+        await db.ref("/users/admin").set({ username: "admin", password: "admin123" });
       }
-
-      // Ambil data user dari Firebase
-      const snapshot = await db.ref("/users/" + username).once("value");
-
-      if (snapshot.exists()) {
-        const userData = snapshot.val();
-        
-        if (userData.password === password) {
-          // Login sukses
+      const snap = await db.ref("/users/admin").once("value");
+      if (snap.exists()) {
+        const data = snap.val();
+        if (data.password === password) {
           localStorage.setItem("loginUser", username);
-          localStorage.setItem("username", username); // Simpan untuk kompatibilitas
-          localStorage.setItem("password", password); // Simpan untuk kompatibilitas di halaman profil
-          
+          localStorage.setItem("isAdmin", "true");
+          localStorage.setItem("username", username);
+          localStorage.setItem("password", password);
           showToast("Login berhasil! Mengalihkan...", "success");
-          
-          setTimeout(() => {
-            window.location.href = "dashboard.html";
-          }, 1200);
+          setTimeout(() => { window.location.href = "pengaturan.html"; }, 1200);
         } else {
-          showToast("Username atau Password salah!", "danger");
+          showToast("Password salah!", "danger");
         }
       } else {
-        showToast("Username tidak terdaftar!", "danger");
+        showToast("Akun admin tidak ditemukan!", "danger");
       }
-    } catch (error) {
-      console.error("Firebase login error: ", error);
-      showToast("Gagal terhubung ke Firebase: " + error.message, "danger");
+    } catch (err) {
+      showToast("Gagal terhubung ke Firebase: " + err.message, "danger");
     }
   }
+
+  /* ============================================================
+     PREVIEW PANEL — CHART + FIREBASE
+  ============================================================ */
+  let previewBatasMaksimal = 2.0;
+  let previewBatasBahaya   = 1.6;
+
+  const previewLabels = [];
+  const previewVals   = [];
+
+  function initPreviewChart() {
+    const ctx = document.getElementById("previewChart").getContext("2d");
+    const theme = document.documentElement.getAttribute("data-theme");
+    const tickColor = theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(15,23,42,0.45)";
+    const gridColor = theme === "dark" ? "rgba(255,255,255,0.07)" : "rgba(15,23,42,0.08)";
+
+    const grad = ctx.createLinearGradient(0, 0, 0, 180);
+    grad.addColorStop(0, "rgba(59,130,246,0.5)");
+    grad.addColorStop(1, "rgba(59,130,246,0.0)");
+
+    for (let i = 5; i >= 0; i--) {
+      const t = new Date(Date.now() - i * 10 * 60 * 1000);
+      previewLabels.push(t.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }));
+      previewVals.push(Math.round(80 + Math.random() * 60));
+    }
+
+    window.previewChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: previewLabels,
+        datasets: [{
+          label: "Level Air (cm)",
+          data: previewVals,
+          borderColor: "#3b82f6",
+          borderWidth: 2.5,
+          backgroundColor: grad,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: "#3b82f6",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 1.5,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            min: 0,
+            max: previewBatasMaksimal * 100,
+            grid: { color: gridColor },
+            ticks: { color: tickColor, font: { size: 9 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: tickColor, font: { size: 9 }, maxTicksLimit: 4 }
+          }
+        }
+      }
+    });
+  }
+
+  function updatePreviewUI(heightCm, statusOverride) {
+    const fill   = document.getElementById("previewFill");
+    const badge  = document.getElementById("previewBadge");
+    const valEl  = document.getElementById("previewHeight");
+    const timeEl = document.getElementById("previewTime");
+
+    const maxCm = previewBatasMaksimal * 100;
+    const pct   = Math.min(100, Math.max(0, (heightCm / maxCm) * 100));
+    valEl.innerHTML = `${Math.round(heightCm)}<span>cm</span>`;
+    fill.style.height = `${pct}%`;
+
+    const isBahaya = statusOverride
+      ? statusOverride.toLowerCase() === "bahaya"
+      : (heightCm / 100) >= previewBatasBahaya;
+
+    fill.className  = "mini-fill " + (isBahaya ? "bahaya" : "aman");
+    badge.className = "mini-badge " + (isBahaya ? "bahaya" : "aman");
+    badge.innerText = isBahaya ? "Bahaya" : "Aman";
+
+    const now = new Date();
+    timeEl.innerText = `Update: ${now.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit", second:"2-digit" })} WIB`;
+
+    if (window.previewChart) {
+      const tStr = now.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+      window.previewChart.data.labels.push(tStr);
+      window.previewChart.data.datasets[0].data.push(Math.round(heightCm));
+      if (window.previewChart.data.labels.length > 8) {
+        window.previewChart.data.labels.shift();
+        window.previewChart.data.datasets[0].data.shift();
+      }
+      window.previewChart.update();
+    }
+  }
+
+  function startPreview() {
+    let fallback;
+    const triggerFallback = () => {
+      if (fallback) return;
+      let sim = 1.0;
+      fallback = setInterval(() => {
+        sim += (Math.random() - 0.45) * 0.12;
+        if (sim > 1.8) sim = 1.7;
+        if (sim < 0.3) sim = 0.4;
+        updatePreviewUI(sim * 100, null);
+      }, 5000);
+    };
+
+    try {
+      db.ref("/settings").on("value", (snap) => {
+        if (snap.exists()) {
+          const d = snap.val();
+          previewBatasBahaya   = (d.bahaya  || 160) / 100;
+          previewBatasMaksimal = (d.maksimal || 200) / 100;
+          if (window.previewChart) {
+            window.previewChart.options.scales.y.max = previewBatasMaksimal * 100;
+            window.previewChart.update();
+          }
+          // Update legend
+          const legend = document.getElementById("previewLegend");
+          if (legend) {
+            let html = "";
+            for (let i = 5; i >= 0; i--) {
+              const cm = Math.round(previewBatasMaksimal * 100 * (i / 5));
+              html += `<span>${cm}cm</span>`;
+            }
+            legend.innerHTML = html;
+          }
+        }
+      });
+    } catch(e) {}
+
+    try {
+      db.ref("/MonitoringAir/Ketinggian").on("value", (snap) => {
+        if (snap.exists()) {
+          const cm = Number(snap.val());
+          const status = (cm / 100) >= previewBatasBahaya ? "Bahaya" : "Aman";
+          updatePreviewUI(cm, status);
+          if (fallback) { clearInterval(fallback); fallback = null; }
+        } else { triggerFallback(); }
+      }, () => { triggerFallback(); });
+    } catch(e) { triggerFallback(); }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initPreviewChart();
+    startPreview();
+  });
 </script>
 
 </body>
