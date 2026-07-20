@@ -816,11 +816,12 @@
     }
   }
 
-  /* ============================================================
+/* ============================================================
      PREVIEW PANEL — CHART + FIREBASE
   ============================================================ */
   let previewBatasMaksimal = 2.0;
   let previewBatasBahaya   = 1.6;
+  let isBrowserAlertSent   = false; // FLAG ANTI-SPAM NOTIFIKASI
 
   const previewLabels = [];
   const previewVals   = [];
@@ -894,6 +895,18 @@
     const isBahaya = statusOverride
       ? statusOverride.toLowerCase() === "bahaya"
       : (heightCm / 100) >= previewBatasBahaya;
+
+    // ============================================================
+    // INTEGRASI NOTIFIKASI BROWSER AUTOMATIS
+    // ============================================================
+    if (isBahaya) {
+      if (!isBrowserAlertSent) {
+        kirimNotifikasiBrowser(Math.round(heightCm));
+        isBrowserAlertSent = true; // Tandai bahwa notifikasi sudah dikirim
+      }
+    } else {
+      isBrowserAlertSent = false; // Reset flag saat air kembali aman
+    }
 
     fill.className  = "mini-fill " + (isBahaya ? "bahaya" : "aman");
     badge.className = "mini-badge " + (isBahaya ? "bahaya" : "aman");
@@ -969,19 +982,19 @@
   });
 
   // 1. Minta izin notifikasi browser saat website pertama dibuka
-if (Notification.permission !== 'granted') {
-  Notification.requestPermission();
-}
-
-// 2. Fungsi untuk memunculkan notifikasi
-function kirimNotifikasiBrowser(tinggi) {
-  if (Notification.permission === 'granted') {
-    new Notification("⚠️ PERINGATAN BAHAYA DAM!", {
-      body: `Ketinggian air telah menyentuh ${tinggi} cm!`,
-      icon: "https://cdn-icons-png.flaticon.com/512/564/564619.png" // opsional
-    });
+  if (window.Notification && Notification.permission !== 'granted') {
+    Notification.requestPermission();
   }
-}
+
+  // 2. Fungsi untuk memunculkan notifikasi browser
+  function kirimNotifikasiBrowser(tinggi) {
+    if (window.Notification && Notification.permission === 'granted') {
+      new Notification("⚠️ PERINGATAN BAHAYA DAM!", {
+        body: `Ketinggian air telah menyentuh ${tinggi} cm! Segera lakukan pengecekan.`,
+        icon: "https://cdn-icons-png.flaticon.com/512/564/564619.png"
+      });
+    }
+  }
 </script>
 
 </body>
