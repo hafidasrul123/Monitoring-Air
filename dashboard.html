@@ -24,6 +24,23 @@
     <span id="toastMessage"></span>
   </div>
 
+  <!-- Danger Overlay Border -->
+  <div id="dangerOverlayDash" class="danger-overlay-dash"></div>
+
+  <!-- Danger Alert Banner (Bahaya) -->
+  <div id="dangerBannerDash" class="danger-banner-dash">
+    <div class="danger-banner-dash-inner">
+      <i class="fa-solid fa-triangle-exclamation db-icon"></i>
+      <div>
+        <div class="db-title">⚠️ PERINGATAN BAHAYA! Ketinggian Air Kritis</div>
+        <div class="db-sub" id="dbSubText">Ketinggian air telah melewati batas bahaya — segera lakukan pengecekan!</div>
+      </div>
+      <button class="db-close" onclick="dismissDashBanner()" title="Tutup">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
   <div class="app-layout">
     
     <!-- Mobile Hamburger Header -->
@@ -431,12 +448,88 @@
       initChart();
       listenFirebase();
 
+      // Minta izin notifikasi browser secara langsung
+      if (window.Notification && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+
       setInterval(() => {
         if (typeof window.currentWaterHeightCm !== "undefined") {
           addChartData(window.currentWaterHeightCm);
         }
       }, 60000);
     });
+  </script>
+
+  <!-- Danger Notification Logic -->
+  <script>
+    let dashBannerDismissed = false;
+    let dashAlertSent       = false;
+
+    function tampilkanBannerBahayaDash(cm) {
+      if (dashBannerDismissed) return;
+      const banner  = document.getElementById("dangerBannerDash");
+      const overlay = document.getElementById("dangerOverlayDash");
+      const sub     = document.getElementById("dbSubText");
+      if (!banner) return;
+      sub.innerText = `Ketinggian air: ${cm} cm — melewati batas bahaya! Segera lakukan pengecekan.`;
+      banner.classList.add("show");
+      overlay.classList.add("show");
+    }
+
+    function sembunyikanBannerBahayaDash() {
+      const banner  = document.getElementById("dangerBannerDash");
+      const overlay = document.getElementById("dangerOverlayDash");
+      if (!banner) return;
+      banner.classList.remove("show");
+      overlay.classList.remove("show");
+    }
+
+    function dismissDashBanner() {
+      dashBannerDismissed = true;
+      sembunyikanBannerBahayaDash();
+      // Reset setelah 2 menit agar bisa muncul lagi jika masih bahaya
+      setTimeout(() => { dashBannerDismissed = false; }, 120000);
+    }
+
+    // --- Kirim Notifikasi Browser Standar ---
+    function kirimNotifBrowserDash(cm) {
+      if (window.Notification && Notification.permission === 'granted') {
+        try {
+          new Notification("⚠️ PERINGATAN BAHAYA DAM!", {
+            body: `Ketinggian air: ${cm} cm! Segera lakukan pengecekan.`,
+            icon: "https://cdn-icons-png.flaticon.com/512/564/564619.png"
+          });
+        } catch(e) {
+          console.warn('Gagal memicu notifikasi:', e);
+        }
+      }
+    }
+
+    // Patch updateWaterLevelUI untuk trigger notifikasi bahaya
+    const _origUpdateUI = window.updateWaterLevelUI;
+    window.updateWaterLevelUI = function(height, skipChartUpdate, statusOverride) {
+      _origUpdateUI(height, skipChartUpdate, statusOverride);
+
+      const batasBahayaM = typeof batasBahaya !== 'undefined' ? batasBahaya : 4.0;
+      const isBahaya = statusOverride
+        ? statusOverride.toLowerCase() === "bahaya"
+        : height >= batasBahayaM;
+      const cm = Math.round(height * 100);
+
+      if (isBahaya) {
+        if (!dashAlertSent) {
+          kirimNotifBrowserDash(cm);
+          dashAlertSent = true;
+        }
+        tampilkanBannerBahayaDash(cm);
+      } else {
+        dashAlertSent = false;
+        dashBannerDismissed = false;
+        sembunyikanBannerBahayaDash();
+      }
+    };
+
   </script>
 
   <!-- Sidebar & Theme switching logic -->
